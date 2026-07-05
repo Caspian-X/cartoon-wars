@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stick War: Mana Front</title>
+<style>
+  html,body{
+    margin:0; height:100%; overflow:hidden;
+    background:#11161d;
+    font-family:'Comic Sans MS','Chalkboard SE','Marker Felt',cursive,sans-serif;
+  }
+  body{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; padding:8px;
+  }
+  h1{
+    color:#f3e9d2; margin:0; font-size:20px; letter-spacing:.5px;
+    text-shadow:2px 2px 0 #000;
+  }
+  .board{
+    position:relative;
+    width:97vw; max-width:1400px;
+    height:min(74vh, 580px);
+    border:3px solid #10151b;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 8px 0 #10151b, 0 12px 28px rgba(0,0,0,.6);
+    background:#8fd0ea;
+  }
+  canvas{
+    position:absolute; inset:0;
+    width:100%; height:100%; display:block;
+  }
+
+  /* ---- top HUD ---- */
+  .topHud{
+    position:absolute; top:0; left:0; right:0;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:10px 14px; gap:14px; z-index:3;
+    pointer-events:none;
+  }
+  .hpWrap{flex:1; max-width:420px;}
+  .hpWrap.enemy{text-align:right; margin-left:auto;}
+  .hpWrap .label{
+    font-size:12px; font-weight:bold; color:#fff;
+    text-shadow:1px 1px 2px rgba(0,0,0,.7);
+    display:flex; justify-content:space-between; margin-bottom:3px;
+  }
+  .hpWrap.enemy .label{flex-direction:row-reverse;}
+  .bar-outer{
+    height:13px; border:2px solid #10151b; border-radius:8px;
+    background:rgba(20,20,20,.45); overflow:hidden;
+  }
+  .bar-inner{height:100%; transition:width .15s linear;}
+  #playerHpBar{background:linear-gradient(90deg,#8fe0ff,#3f8fe0); margin-left:auto;}
+  #enemyHpBar{background:linear-gradient(90deg,#ff6b5e,#c22f26);}
+
+  /* ---- bottom tray (below board) ---- */
+  .bottomTray{
+    width:97vw; max-width:1400px;
+    display:flex; align-items:center; gap:12px;
+    padding:10px 12px;
+    background:linear-gradient(180deg,#1a202a,#0f141b);
+    border:3px solid #10151b;
+    border-radius:10px;
+    box-shadow:0 4px 0 #10151b;
+  }
+  .bottomTray .troopBtns{flex:1; justify-content:center;}
+  .manaWrap{
+    display:flex; align-items:center; gap:8px;
+    color:#fff; min-width:150px;
+  }
+  .diamond{
+    width:22px; height:22px; background:linear-gradient(135deg,#8fe0ff,#2f6fed);
+    border:2px solid #0a1a33; transform:rotate(45deg); border-radius:3px;
+    flex:none;
+    box-shadow:0 0 6px rgba(80,170,255,.8);
+  }
+  .manaBars{flex:1;}
+  .manaBars .bar-outer{height:14px;}
+  #manaBar{background:linear-gradient(90deg,#8fe0ff,#2f6fed);}
+  .manaText{font-size:11px; text-shadow:1px 1px 2px rgba(0,0,0,.8); margin-top:2px;}
+
+  .troopBtns{display:flex; gap:8px; flex:1; justify-content:center;}
+  .troopBtn{
+    width:64px;
+    background:linear-gradient(180deg,#1f2b3a,#141c26);
+    border:2px solid #4c6a8a;
+    border-radius:10px;
+    padding:5px 3px 4px;
+    cursor:pointer;
+    text-align:center;
+    color:#eaf3ff;
+    font-family:inherit;
+    box-shadow:0 3px 0 #05070a;
+    transition:transform .06s, opacity .2s;
+  }
+  .troopBtn:active{transform:translateY(2px);}
+  .troopBtn:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+  .troopBtn .icon{font-size:22px; display:block;}
+  .troopBtn .name{font-size:10px; font-weight:bold; display:block; margin-top:1px;}
+  .troopBtn .cost{
+    display:inline-block; margin-top:3px;
+    background:#e8b93a; color:#28210a;
+    border-radius:5px; padding:0 6px;
+    font-size:11px; font-weight:bold;
+  }
+
+
+  .menuOverlay{
+    position:absolute; inset:0; z-index:10;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(10,12,16,.75);
+    backdrop-filter:blur(4px);
+  }
+  .menuPanel{
+    background:rgba(25,30,40,.95);
+    border:3px solid #d9b24a;
+    border-radius:16px;
+    padding:28px;
+    color:white;
+    text-align:center;
+    max-width:500px;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .menuPanel h2{margin-top:0;font-size:36px;}
+  .menuPanel button{
+    font-family:inherit;
+    font-size:22px;
+    font-weight:bold;
+    padding:12px 30px;
+    cursor:pointer;
+    border-radius:10px;
+  }
+
+  .overlay{
+    position:absolute; inset:0;
+    background:rgba(10,12,16,.86);
+    display:none; align-items:center; justify-content:center; flex-direction:column;
+    z-index:5; color:#fff; text-align:center;
+  }
+  .overlay.show{display:flex;}
+  .overlay h2{font-size:32px; margin:0 0 6px; text-shadow:2px 2px 0 #000;}
+  .overlay p{margin:0 0 16px; color:#ddd;}
+  .overlay button{
+    font-family:inherit; font-size:16px; padding:10px 22px; border-radius:8px;
+    border:2px solid #fff; background:#e8b93a; color:#1c1a17; font-weight:bold;
+    cursor:pointer; box-shadow:0 3px 0 #8a6a12;
+  }
+  .overlay button:active{transform:translateY(2px); box-shadow:none;}
+
+  /* ---- crossbow aim buttons ---- */
+  .crossbowAim{
+    position:absolute; left:8px; bottom:8px;
+    display:flex; flex-direction:column; gap:3px;
+    z-index:4;
+    pointer-events:none;
+  }
+  .crossbowAim .aimBtn{
+    pointer-events:auto;
+    width:34px; height:28px;
+    font-size:16px; line-height:1;
+    background:rgba(20,28,40,.8);
+    border:2px solid #6a8aaa;
+    border-radius:6px;
+    color:#c8d8f0;
+    cursor:pointer;
+    font-family:inherit;
+    transition:background .1s;
+    padding:0;
+  }
+  .crossbowAim .aimBtn:hover{background:rgba(50,80,120,.8);}
+  .crossbowAim .aimBtn:active{background:rgba(80,130,180,.9);}
+</style>
+</head>
+<body>
+
+<h1>⚔ Stick War: Mana Front ⚔</h1>
+
+<div class="board" id="board">
+  <canvas id="game"></canvas>
+  <div class="menuOverlay" id="mainMenu">
+    <div class="menuPanel">
+      <h2>⚔ Stick War: Mana Front ⚔</h2>
+      <p>Destroy the enemy base before yours falls.</p>
+      <p><b>Controls</b><br>1-3 = Spawn troops<br>▲/▼ = Aim crossbow</p>
+      <button onclick="startGame()">▶ Play</button>
+    </div>
+  </div>
+
+
+  <div class="topHud">
+    <div class="hpWrap player">
+      <div class="label"><span>Your Base</span><span id="playerHpText">180/180</span></div>
+      <div class="bar-outer"><div class="bar-inner" id="playerHpBar" style="width:100%"></div></div>
+    </div>
+    <div class="hpWrap enemy">
+      <div class="label"><span>Enemy Base</span><span id="enemyHpText">180/180</span></div>
+      <div class="bar-outer"><div class="bar-inner" id="enemyHpBar" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="crossbowAim" id="crossbowAim">
+    <button class="aimBtn" id="aimUp" onclick="adjustAngle(1)">▲</button>
+    <button class="aimBtn" id="aimDown" onclick="adjustAngle(-1)">▼</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <h2 id="overlayTitle">Victory!</h2>
+    <p id="overlaySub">You smashed the enemy base.</p>
+    <button onclick="resetGame()">Play Again</button><br><br><button onclick="showMainMenu()">Main Menu</button>
+  </div>
+</div>
+
+<div class="bottomTray">
+  <div class="manaWrap">
+    <div class="diamond"></div>
+    <div class="manaBars">
+      <div class="bar-outer"><div class="bar-inner" id="manaBar" style="width:50%"></div></div>
+      <div class="manaText" id="manaText">5 / 10</div>
+    </div>
+  </div>
+
+  <div class="troopBtns">
+    <button class="troopBtn" id="btn0" onclick="trySpawn(0)">
+      <span class="icon">🗡️</span>
+      <span class="name">Grunt</span>
+      <span class="cost">2</span>
+    </button>
+    <button class="troopBtn" id="btn1" onclick="trySpawn(1)">
+      <span class="icon">🏹</span>
+      <span class="name">Archer</span>
+      <span class="cost">4</span>
+    </button>
+    <button class="troopBtn" id="btn2" onclick="trySpawn(2)">
+      <span class="icon">🗿</span>
+      <span class="name">Golem</span>
+      <span class="cost">8</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// ---- resolution-independent layout (recomputed on resize) ----
+let W = 0, H = 0, GROUND_Y = 0, BASE_L_X = 0, BASE_R_X = 0, LANE_MIN = 0, LANE_MAX = 0;
+
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W = rect.width; H = rect.height;
+  GROUND_Y = H - Math.max(38, H*0.12);
+  BASE_L_X = W * 0.07;
+  BASE_R_X = W * 0.93;
+  LANE_MIN = BASE_L_X + 34;
+  LANE_MAX = BASE_R_X - 34;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// troop stats use FRACTION-based speed/range (0..1 across the lane) so the game
+// plays identically at any screen size.
+const TROOP_TYPES = [
+  { key:'grunt',  name:'Grunt',  cost:2, hp:35,  dmg:6,  atkInterval:900,  range:0.018, speed:0.11,  weapon:'sword', scale:1.0  },
+  { key:'archer', name:'Archer', cost:4, hp:22,  dmg:9,  atkInterval:1100, range:0.16,  speed:0.09,  weapon:'bow',   scale:0.95 },
+  { key:'golem',  name:'Golem',  cost:8, hp:120, dmg:18, atkInterval:1400, range:0.024, speed:0.05,  weapon:'golem', scale:1.6  },
+];
+
+const BASE_MAX_HP = 180;
+const MANA_MAX = 10;
+const MANA_REGEN_PER_SEC = 1/1.8;
+const AI_DECISION_INTERVAL = 1200;
+const CROSSBOW_RANGE = 0.75;
+const CROSSBOW_FIRE_INTERVAL = 1400;
+const CROSSBOW_DMG = 12;
+
+let state;
+
+function freshState(){
+  return {
+    playerHP: BASE_MAX_HP,
+    enemyHP: BASE_MAX_HP,
+    playerMana: 5,
+    aiMana: 5,
+    troops: [],
+    projectiles: [],
+    particles: [],
+    nextId: 1,
+    aiTimer: 0,
+    running: true,
+    lastTime: null,
+    playerCrossbow: { angle: 0, fireTimer: 600 },
+    enemyCrossbow: { angle: 0, fireTimer: 800 },
+  };
+}
+
+function resetGame(){
+  state = freshState();
+  document.getElementById('overlay').classList.remove('show');
+  updateHUD();
+  if (!rafRunning) { rafRunning = true; requestAnimationFrame(loop); }
+}
+
+function adjustAngle(dir){
+  if (!state || !state.running) return;
+  const cb = state.playerCrossbow;
+  cb.angle = Math.max(-0.4, Math.min(0.8, cb.angle + dir * 0.05));
+}
+
+function trySpawn(typeIdx){
+  if (!state.running) return;
+  const t = TROOP_TYPES[typeIdx];
+  if (state.playerMana < t.cost) return;
+  state.playerMana -= t.cost;
+  spawnTroop('player', typeIdx);
+  updateHUD();
+}
+
+function spawnTroop(side, typeIdx){
+  const t = TROOP_TYPES[typeIdx];
+  state.troops.push({
+    id: state.nextId++,
+    side, typeIdx,
+    hp: t.hp, maxHp: t.hp,
+    frac: side === 'player' ? 0 : 1,
+    yJitter: (Math.random()*16 - 8),
+    atkTimer: 0,
+    phase: Math.random()*Math.PI*2,
+    state: 'walk',
+    hitFlash: 0,
+  });
+}
+
+function aiDecision(dt){
+  state.aiTimer += dt;
+  if (state.aiTimer < AI_DECISION_INTERVAL) return;
+  state.aiTimer = 0;
+  const affordable = TROOP_TYPES.map((t,i)=>({t,i})).filter(o => o.t.cost <= state.aiMana);
+  if (affordable.length === 0) return;
+  if (Math.random() > 0.72) return; // medium pace
+  const weights = affordable.map(o => o.t.cost <= 4 ? 3 : 1);
+  const total = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random()*total, pick = affordable[0];
+  for (let k=0;k<affordable.length;k++){
+    if (r < weights[k]) { pick = affordable[k]; break; }
+    r -= weights[k];
+  }
+  state.aiMana -= pick.t.cost;
+  spawnTroop('enemy', pick.i);
+}
+
+function nearestCrossbowTarget(side){
+  let best = null, bestDist = Infinity;
+  for (const o of state.troops) {
+    if (o.side === side) continue;
+    if (side === 'player' && o.frac > CROSSBOW_RANGE) continue;
+    if (side === 'enemy' && o.frac < 1 - CROSSBOW_RANGE) continue;
+    const d = side === 'player' ? o.frac : 1 - o.frac;
+    if (d < bestDist) { bestDist = d; best = o; }
+  }
+  return best;
+}
+
+function nearestEnemy(troop){
+  let best = null, bestDist = Infinity;
+  for (const o of state.troops){
+    if (o.side === troop.side) continue;
+    const d = Math.abs(o.frac - troop.frac);
+    const ahead = troop.side === 'player' ? (o.frac >= troop.frac) : (o.frac <= troop.frac);
+    if (ahead && d < bestDist){ bestDist = d; best = o; }
+  }
+  return best ? {troop:best, dist:bestDist} : null;
+}
+
+function update(dt){
+  if (!state.running) return;
+  const dtSec = dt/1000;
+
+  state.playerMana = Math.min(MANA_MAX, state.playerMana + MANA_REGEN_PER_SEC*dtSec);
+  state.aiMana = Math.min(MANA_MAX, state.aiMana + MANA_REGEN_PER_SEC*dtSec);
+  aiDecision(dt);
+
+  const prevHp = new Map();
+  for (const tr of state.troops) prevHp.set(tr.id, tr.hp);
+
+  for (const troop of state.troops){
+    if (troop.hp <= 0) continue;
+    const t = TROOP_TYPES[troop.typeIdx];
+    const dir = troop.side === 'player' ? 1 : -1;
+
+    const distToBase = troop.side === 'player' ? (1 - troop.frac) : troop.frac;
+
+    const foe = nearestEnemy(troop);
+    let target = null, targetIsBase = false;
+
+    if (foe && foe.dist <= t.range){ target = foe.troop; }
+    else if (distToBase <= t.range){ targetIsBase = true; }
+
+    if (target || targetIsBase){
+      troop.state = 'attack';
+      troop.atkTimer -= dt;
+      if (troop.atkTimer <= 0){
+        troop.atkTimer = t.atkInterval;
+        if (target){
+          if (t.weapon === 'bow'){
+            const x1 = LANE_MIN + troop.frac * (LANE_MAX - LANE_MIN);
+            const y1 = GROUND_Y + troop.yJitter * 0.25 - 20 * t.scale;
+            const x2 = LANE_MIN + target.frac * (LANE_MAX - LANE_MIN);
+            const y2 = GROUND_Y + target.yJitter * 0.25 - 20 * t.scale;
+            state.projectiles.push({
+              x1, y1, x2, y2,
+              targetId: target.id,
+              damage: t.dmg,
+              progress: 0,
+              speed: 1 / 350,
+              side: troop.side,
+            });
+          } else {
+            target.hp -= t.dmg;
+          }
+        } else {
+          if (troop.side === 'player') state.enemyHP = Math.max(0, state.enemyHP - t.dmg);
+          else state.playerHP = Math.max(0, state.playerHP - t.dmg);
+        }
+      }
+    } else {
+      troop.state = 'walk';
+      troop.phase += dtSec * 8;
+      troop.frac += dir * t.speed * dtSec;
+      troop.frac = Math.max(0, Math.min(1, troop.frac));
+    }
+
+    if (troop.hitFlash > 0) troop.hitFlash -= dt;
+  }
+
+  // ---- Crossbow update ----
+  for (const side of ['player', 'enemy']) {
+    const cb = side === 'player' ? state.playerCrossbow : state.enemyCrossbow;
+    const baseX = side === 'player' ? BASE_L_X : BASE_R_X;
+    const cbY = GROUND_Y - 82;
+    const target = nearestCrossbowTarget(side);
+
+    cb.fireTimer -= dt;
+    if (cb.fireTimer <= 0) {
+      cb.fireTimer = CROSSBOW_FIRE_INTERVAL + (Math.random() - 0.5) * 300;
+      if (target) {
+        const tx = LANE_MIN + target.frac * (LANE_MAX - LANE_MIN);
+        const ty = GROUND_Y + target.yJitter * 0.25 - 20;
+        state.projectiles.push({
+          x1: baseX, y1: cbY, x2: tx, y2: ty,
+          targetId: target.id,
+          damage: CROSSBOW_DMG,
+          progress: 0,
+          speed: 1 / 250,
+          side: side,
+          kind: 'bolt',
+        });
+      }
+    }
+
+    if (side === 'enemy' && target) {
+      const tx = LANE_MIN + target.frac * (LANE_MAX - LANE_MIN);
+      const ty = GROUND_Y + target.yJitter * 0.25 - 20;
+      const dx = tx - baseX;
+      const dy = ty - cbY;
+      const targetAngle = Math.atan2(dy, Math.abs(dx));
+      cb.angle += (targetAngle - cb.angle) * 0.06;
+    }
+    cb.angle = Math.max(-0.4, Math.min(0.8, cb.angle));
+  }
+
+  for (const p of state.projectiles) {
+    p.progress += p.speed * dt;
+    if (p.progress >= 1) {
+      const targetTr = state.troops.find(tr => tr.id === p.targetId);
+      if (targetTr) {
+        targetTr.hp -= p.damage;
+        targetTr.hitFlash = 120;
+        for (let i = 0; i < 6; i++) {
+          state.particles.push({
+            x: p.x2 + (Math.random() - 0.5) * 12,
+            y: p.y2 + (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 4,
+            vy: -Math.random() * 3 - 1,
+            life: 250 + Math.random() * 250,
+            maxLife: 500,
+            color: targetTr.side === 'player' ? '#4fc3f7' : '#ff7043',
+            size: 1.5 + Math.random() * 2.5,
+          });
+        }
+      }
+      p.done = true;
+    }
+  }
+  state.projectiles = state.projectiles.filter(p => !p.done);
+
+  for (const tr of state.troops) {
+    const prev = prevHp.get(tr.id);
+    if (prev !== undefined && prev !== tr.hp && prev - tr.hp > 0) {
+      tr.hitFlash = 120;
+      const x = LANE_MIN + tr.frac * (LANE_MAX - LANE_MIN);
+      for (let i = 0; i < 4; i++) {
+        state.particles.push({
+          x: x + (Math.random() - 0.5) * 16,
+          y: GROUND_Y - 16 + (Math.random() - 0.5) * 20,
+          vx: (Math.random() - 0.5) * 3,
+          vy: -Math.random() * 3,
+          life: 200 + Math.random() * 200,
+          maxLife: 400,
+          color: '#ffd54f',
+          size: 2 + Math.random() * 3,
+        });
+      }
+    }
+  }
+
+  for (const p of state.particles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.12;
+    p.life -= dt;
+  }
+  state.particles = state.particles.filter(p => p.life > 0);
+
+  state.troops = state.troops.filter(tr => tr.hp > 0);
+
+  if (state.playerHP <= 0 || state.enemyHP <= 0){
+    state.running = false;
+    showOverlay(state.enemyHP <= 0);
+  }
+
+  updateHUD();
+}
+
+function showOverlay(won){
+  const ov = document.getElementById('overlay');
+  document.getElementById('overlayTitle').textContent = won ? 'Victory!' : 'Defeat...';
+  document.getElementById('overlayTitle').style.color = won ? '#ffd76a' : '#ff9b8f';
+  document.getElementById('overlaySub').textContent = won
+    ? 'You smashed the enemy base to rubble.'
+    : 'Your base has fallen. Try again!';
+  ov.classList.add('show');
+}
+
+function updateHUD(){
+  document.getElementById('playerHpBar').style.width = (state.playerHP/BASE_MAX_HP*100)+'%';
+  document.getElementById('enemyHpBar').style.width = (state.enemyHP/BASE_MAX_HP*100)+'%';
+  document.getElementById('playerHpText').textContent = Math.ceil(state.playerHP)+'/'+BASE_MAX_HP;
+  document.getElementById('enemyHpText').textContent = Math.ceil(state.enemyHP)+'/'+BASE_MAX_HP;
+  document.getElementById('manaBar').style.width = (state.playerMana/MANA_MAX*100)+'%';
+  document.getElementById('manaText').textContent = Math.floor(state.playerMana*10)/10 + ' / ' + MANA_MAX;
+  TROOP_TYPES.forEach((t,i)=>{
+    document.getElementById('btn'+i).disabled = state.playerMana < t.cost;
+  });
+}
+
+// ---------- Scenery ----------
+function drawScenery(){
+  const sky = ctx.createLinearGradient(0,0,0,GROUND_Y);
+  sky.addColorStop(0,'#5fb8e8');
+  sky.addColorStop(1,'#bfe8f5');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,W,GROUND_Y+2);
+
+  ctx.fillStyle = 'rgba(255,250,220,0.9)';
+  ctx.beginPath(); ctx.arc(W*0.86, H*0.16, Math.max(20,H*0.05), 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = 'rgba(120,140,150,0.45)';
+  drawMountainRange(GROUND_Y - H*0.18, H*0.16, 5, 11);
+  ctx.fillStyle = 'rgba(95,120,130,0.55)';
+  drawMountainRange(GROUND_Y - H*0.09, H*0.11, 7, 27);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  drawCloud(W*0.18, H*0.15, 1);
+  drawCloud(W*0.55, H*0.1, 0.8);
+  drawCloud(W*0.75, H*0.22, 0.65);
+
+  const grass = ctx.createLinearGradient(0,GROUND_Y,0,H);
+  grass.addColorStop(0,'#7fc154');
+  grass.addColorStop(1,'#4f9e3a');
+  ctx.fillStyle = grass;
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  for (let i=0;i<10;i++){
+    const gy = GROUND_Y + 6 + i*((H-GROUND_Y-6)/10);
+    ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(30,60,20,0.5)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0,GROUND_Y); ctx.lineTo(W,GROUND_Y); ctx.stroke();
+}
+
+function drawMountainRange(baseY, amp, count, seed){
+  ctx.beginPath();
+  ctx.moveTo(0, baseY+amp);
+  const step = W/count;
+  for(let i=0;i<=count;i++){
+    const h = amp * (0.4 + 0.6*Math.abs(Math.sin(i*1.3+seed)));
+    ctx.lineTo(i*step, baseY+amp-h);
+  }
+  ctx.lineTo(W, baseY+amp+40);
+  ctx.lineTo(0, baseY+amp+40);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawCloud(x,y,s){
+  ctx.beginPath();
+  ctx.ellipse(x,y,26*s,14*s,0,0,Math.PI*2);
+  ctx.ellipse(x+22*s,y+4*s,20*s,12*s,0,0,Math.PI*2);
+  ctx.ellipse(x-22*s,y+5*s,18*s,11*s,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+function drawTower(x, side, crossbow){
+  const isPlayer = side === 'player';
+  const tw = 52, th = 78;
+  const top = GROUND_Y - th;
+  const stoneDark = isPlayer ? '#5a6068' : '#5c3a34';
+  const stoneLight = isPlayer ? '#7a828c' : '#7c4a44';
+  const trim = isPlayer ? '#3a4048' : '#3c201a';
+
+  ctx.fillStyle = stoneDark;
+  ctx.fillRect(x - tw/2, top, tw, th);
+  ctx.strokeStyle = trim;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - tw/2, top, tw, th);
+
+  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+  ctx.lineWidth = 1;
+  for (let r = 1; r < 5; r++) {
+    const y = top + (th / 5) * r;
+    ctx.beginPath();
+    ctx.moveTo(x - tw/2, y);
+    ctx.lineTo(x + tw/2, y);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#1a1a1a';
+  const doorW = 16, doorH = 24;
+  const doorY = GROUND_Y - doorH;
+  ctx.beginPath();
+  ctx.moveTo(x - doorW/2, doorY + doorH);
+  ctx.lineTo(x - doorW/2, doorY + 7);
+  ctx.arc(x, doorY + 7, doorW/2, Math.PI, 0);
+  ctx.lineTo(x + doorW/2, doorY + doorH);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = stoneLight;
+  for (let i = -1; i <= 1; i++) {
+    const cx = x + i * 12;
+    const cw = 10, ch = 8;
+    ctx.fillRect(cx - cw/2, top - ch, cw, ch);
+    ctx.strokeStyle = trim;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx - cw/2, top - ch, cw, ch);
+  }
+
+  ctx.fillStyle = '#4a3a28';
+  ctx.fillRect(x - 18, top - 4, 36, 5);
+
+  // ---- Crossbow ----
+  const pivotX = x;
+  const pivotY = top - 4;
+  ctx.save();
+  ctx.translate(pivotX, pivotY);
+  if (!isPlayer) ctx.scale(-1, 1);
+
+  const ang = crossbow.angle;
+  ctx.rotate(ang);
+
+  ctx.fillStyle = '#6a4a28';
+  ctx.fillRect(-4, -4, 28, 8);
+  ctx.strokeStyle = '#4a2a10';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-4, -4, 28, 8);
+
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(26, 0, 14, -1.4, 1.4);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1.5;
+  const bowTipX = 26 - 14 * Math.cos(1.4);
+  const bowTipY = 14 * Math.sin(1.4);
+  ctx.beginPath();
+  ctx.moveTo(bowTipX, -bowTipY);
+  ctx.lineTo(6, 0);
+  ctx.lineTo(bowTipX, bowTipY);
+  ctx.stroke();
+
+  ctx.strokeStyle = '#5a3a1a';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(34, 0);
+  ctx.stroke();
+
+  ctx.fillStyle = '#bbb';
+  ctx.beginPath();
+  ctx.moveTo(36, 0);
+  ctx.lineTo(32, -3);
+  ctx.lineTo(32, 3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function limb(x1,y1,ang,len){
+  return { x2: x1 + Math.cos(ang)*len, y2: y1 + Math.sin(ang)*len };
+}
+
+function drawStick(troop){
+  const t = TROOP_TYPES[troop.typeIdx];
+  const s = t.scale;
+  const x0 = LANE_MIN + troop.frac*(LANE_MAX-LANE_MIN);
+  const y0 = GROUND_Y + troop.yJitter*0.25;
+  const facing = troop.side === 'player' ? 1 : -1;
+  const isPlayer = troop.side === 'player';
+  const col = isPlayer ? '#2b2b2b' : '#7a1f19';
+  const fill = isPlayer ? '#ffffff' : '#e0483e';
+
+  const bobY = troop.state === 'walk' ? Math.abs(Math.sin(troop.phase)) * 4 * s : 0;
+  const lungeX = troop.state === 'attack' ? Math.sin(performance.now()/80) * 4 * s * facing : 0;
+  const x = x0 + lungeX;
+  const y = y0 - bobY;
+
+  const headR = 8*s;
+  const bodyLen = 24*s;
+  const legLen = 16*s;
+  const armLen = 14*s;
+
+  const hipY = y - legLen;
+  const neckY = hipY - bodyLen;
+  const headY = neckY - headR;
+
+  let legAngL, legAngR, armAngL, armAngR;
+  if (troop.state === 'attack'){
+    const swing = Math.sin(performance.now()/70) * 0.5;
+    const stance = 0.25;
+    legAngL = Math.PI/2 - stance; legAngR = Math.PI/2 + stance;
+    armAngL = -Math.PI/2 + facing*(0.9 + swing);
+    armAngR = -Math.PI/2 + facing*0.3;
+  } else {
+    const w = Math.sin(troop.phase);
+    legAngL = Math.PI/2 + w*0.6;
+    legAngR = Math.PI/2 - w*0.6;
+    armAngL = -Math.PI/2 - w*0.5*facing;
+    armAngR = -Math.PI/2 + w*0.5*facing;
+  }
+
+  if (troop.hitFlash > 0 && Math.floor(troop.hitFlash / 20) % 2 === 0) {
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+  } else {
+    ctx.strokeStyle = col;
+    ctx.fillStyle = fill;
+  }
+  ctx.lineWidth = 2.6*s;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  const l1 = limb(x, hipY, legAngL, legLen);
+  ctx.moveTo(x, hipY); ctx.lineTo(l1.x2, l1.y2); ctx.stroke();
+  ctx.beginPath();
+  const l2 = limb(x, hipY, legAngR, legLen);
+  ctx.moveTo(x, hipY); ctx.lineTo(l2.x2, l2.y2); ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, hipY); ctx.lineTo(x, neckY); ctx.stroke();
+
+  ctx.beginPath();
+  const a2 = limb(x, neckY+4*s, armAngR, armLen);
+  ctx.moveTo(x, neckY+4*s); ctx.lineTo(a2.x2, a2.y2); ctx.stroke();
+
+  ctx.beginPath();
+  const a1 = limb(x, neckY+4*s, armAngL, armLen);
+  ctx.moveTo(x, neckY+4*s); ctx.lineTo(a1.x2, a1.y2); ctx.stroke();
+
+  if (t.weapon === 'sword'){
+    ctx.strokeStyle = troop.hitFlash > 0 && Math.floor(troop.hitFlash / 20) % 2 === 0 ? '#ffffff' : '#9aa1a8';
+    ctx.lineWidth = 3*s;
+    const swAng = armAngL - facing*0.9;
+    const sw = limb(a1.x2, a1.y2, swAng, 16*s);
+    ctx.beginPath(); ctx.moveTo(a1.x2,a1.y2); ctx.lineTo(sw.x2, sw.y2); ctx.stroke();
+  } else if (t.weapon === 'bow'){
+    ctx.strokeStyle = '#7a5230';
+    ctx.lineWidth = 2*s;
+    ctx.beginPath();
+    ctx.arc(x + facing*10*s, neckY+8*s, 12*s, facing>0? -1.1:Math.PI-2.05, facing>0? 1.1:Math.PI+2.05);
+    ctx.stroke();
+    const bowHandX = x + facing*10*s;
+    const bowHandY = neckY+8*s;
+    if (troop.state === 'attack'){
+      const pull = 0.5 + Math.sin(performance.now()/70) * 0.5;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1.6*s;
+      ctx.beginPath();
+      ctx.moveTo(bowHandX, bowHandY);
+      ctx.lineTo(bowHandX + facing*(8 + pull*22)*s, bowHandY);
+      ctx.stroke();
+    }
+  }
+
+  if (!(troop.hitFlash > 0 && Math.floor(troop.hitFlash / 20) % 2 === 0)) {
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = col;
+  } else {
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#ffffff';
+  }
+  ctx.lineWidth = 2.4*s;
+  ctx.beginPath();
+  ctx.arc(x, headY, headR, 0, Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  drawHpBar(x, headY-headR-9, 22*s, troop, t);
+}
+
+function drawGolem(troop){
+  const t = TROOP_TYPES[troop.typeIdx];
+  const s = t.scale;
+  const x0 = LANE_MIN + troop.frac*(LANE_MAX-LANE_MIN);
+  const y0 = GROUND_Y + troop.yJitter*0.25;
+  const isPlayer = troop.side === 'player';
+  const facing = isPlayer ? 1 : -1;
+
+  const bodyFill = isPlayer ? '#dfe6ec' : '#7a3a34';
+  const bodyDark = isPlayer ? '#aab6c0' : '#4a221e';
+  const strokeCol = isPlayer ? '#3a4550' : '#2c1210';
+  const coreGlow = isPlayer ? '#5fd7ff' : '#ff6a3d';
+
+  const bobY = troop.state === 'walk' ? Math.abs(Math.sin(troop.phase)) * 3 * s : 0;
+  const lungeX = troop.state === 'attack' ? Math.sin(performance.now()/90) * 3 * s * facing : 0;
+  const x = x0 + lungeX;
+  const y = y0 - bobY;
+
+  const legLen = 14*s, torsoW = 26*s, torsoH = 26*s, armW = 9*s, armH = 20*s;
+  const hipY = y - legLen;
+  const torsoTop = hipY - torsoH;
+  const headSize = 14*s;
+  const headY = torsoTop - headSize*0.7;
+
+  const bob = troop.state === 'attack'
+    ? Math.abs(Math.sin(performance.now()/90))*3*s
+    : Math.sin(troop.phase)*2*s;
+
+  const hitFlashWhite = troop.hitFlash > 0 && Math.floor(troop.hitFlash / 20) % 2 === 0;
+
+  ctx.strokeStyle = hitFlashWhite ? '#ffffff' : strokeCol;
+  ctx.lineWidth = 2.6*s;
+  ctx.fillStyle = hitFlashWhite ? '#ffffff' : bodyDark;
+
+  ctx.fillRect(x-torsoW/2+2*s, hipY, 9*s, legLen+4*s);
+  ctx.strokeRect(x-torsoW/2+2*s, hipY, 9*s, legLen+4*s);
+  ctx.fillRect(x+torsoW/2-11*s, hipY, 9*s, legLen+4*s);
+  ctx.strokeRect(x+torsoW/2-11*s, hipY, 9*s, legLen+4*s);
+
+  const armSwing = troop.state==='attack' ? Math.sin(performance.now()/80)*8*s*facing : Math.sin(troop.phase)*4*s;
+  ctx.fillStyle = hitFlashWhite ? '#ffffff' : bodyFill;
+  ctx.save();
+  ctx.translate(x-torsoW/2-armW/2, torsoTop+6*s+bob);
+  ctx.rotate(armSwing*0.05);
+  ctx.fillRect(-armW/2, 0, armW, armH);
+  ctx.strokeRect(-armW/2, 0, armW, armH);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(x+torsoW/2+armW/2, torsoTop+6*s-bob);
+  ctx.rotate(-armSwing*0.05);
+  ctx.fillRect(-armW/2, 0, armW, armH);
+  ctx.strokeRect(-armW/2, 0, armW, armH);
+  ctx.restore();
+
+  ctx.fillStyle = hitFlashWhite ? '#ffffff' : bodyFill;
+  ctx.strokeStyle = hitFlashWhite ? '#ffffff' : strokeCol;
+  ctx.beginPath();
+  ctx.moveTo(x-torsoW/2, torsoTop+torsoH-bob*0.2);
+  ctx.lineTo(x-torsoW/2, torsoTop+6*s-bob*0.2);
+  ctx.lineTo(x-torsoW/2+6*s, torsoTop-bob*0.2);
+  ctx.lineTo(x+torsoW/2-6*s, torsoTop-bob*0.2);
+  ctx.lineTo(x+torsoW/2, torsoTop+6*s-bob*0.2);
+  ctx.lineTo(x+torsoW/2, torsoTop+torsoH-bob*0.2);
+  ctx.closePath();
+  ctx.fill(); ctx.stroke();
+
+  const g = ctx.createRadialGradient(x,torsoTop+torsoH*0.5-bob*0.2,1, x,torsoTop+torsoH*0.5-bob*0.2, 8*s);
+  g.addColorStop(0, coreGlow);
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, torsoTop+torsoH*0.5-bob*0.2, 7*s, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = coreGlow;
+  ctx.beginPath();
+  ctx.arc(x, torsoTop+torsoH*0.5-bob*0.2, 3.4*s, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = hitFlashWhite ? '#ffffff' : bodyFill;
+  ctx.strokeStyle = hitFlashWhite ? '#ffffff' : strokeCol;
+  ctx.lineWidth = 2.6*s;
+  ctx.fillRect(x-headSize/2, headY-bob*0.3, headSize, headSize*0.9);
+  ctx.strokeRect(x-headSize/2, headY-bob*0.3, headSize, headSize*0.9);
+  ctx.fillStyle = hitFlashWhite ? '#ffffff' : coreGlow;
+  ctx.beginPath();
+  ctx.arc(x-headSize*0.2, headY+headSize*0.4-bob*0.3, 1.6*s, 0, Math.PI*2);
+  ctx.arc(x+headSize*0.2, headY+headSize*0.4-bob*0.3, 1.6*s, 0, Math.PI*2);
+  ctx.fill();
+
+  drawHpBar(x, headY-bob*0.3-8, 30*s, troop, t);
+}
+
+function drawHpBar(x, yTop, barW, troop, t){
+  const ratio = Math.max(0, Math.min(1, troop.hp / troop.maxHp));
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(x-barW/2-1, yTop-1, barW+2, 6);
+  const hue = ratio * 120;
+  ctx.fillStyle = `hsl(${hue},85%,45%)`;
+  ctx.fillRect(x-barW/2, yTop, barW*ratio, 4);
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(x-barW/2, yTop, barW*ratio, 4);
+}
+
+function drawProjectiles() {
+  for (const p of state.projectiles) {
+    const x = p.x1 + (p.x2 - p.x1) * p.progress;
+    const y = p.y1 + (p.y2 - p.y1) * p.progress;
+    const arc = p.kind === 'bolt' ? 4 : Math.sin(p.progress * Math.PI) * 18;
+    const drawY = y - arc;
+
+    const angle = Math.atan2(p.y2 - p.y1, p.x2 - p.x1);
+
+    ctx.save();
+    ctx.translate(x, drawY);
+    ctx.rotate(angle);
+
+    if (p.kind === 'bolt') {
+      ctx.strokeStyle = '#3a2210';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(14, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#888';
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.lineTo(11, -4);
+      ctx.lineTo(11, 4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-14, -4);
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-14, 4);
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = '#5c3a1e';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-7, 0);
+      ctx.lineTo(9, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#bdbdbd';
+      ctx.beginPath();
+      ctx.moveTo(11, 0);
+      ctx.lineTo(6, -3);
+      ctx.lineTo(6, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#c62828';
+      ctx.beginPath();
+      ctx.moveTo(-7, 0);
+      ctx.lineTo(-10, -3);
+      ctx.lineTo(-6, 0);
+      ctx.lineTo(-10, 3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawParticles() {
+  for (const p of state.particles) {
+    const alpha = Math.max(0, p.life / p.maxLife);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (0.3 + 0.7 * alpha), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function render(){
+  ctx.clearRect(0,0,W,H);
+  drawScenery();
+  drawTower(BASE_L_X, 'player', state.playerCrossbow);
+  drawTower(BASE_R_X, 'enemy', state.enemyCrossbow);
+  const sorted = [...state.troops].sort((a,b)=>a.frac-b.frac);
+  for (const tr of sorted){
+    const t = TROOP_TYPES[tr.typeIdx];
+    if (t.weapon === 'golem') drawGolem(tr);
+    else drawStick(tr);
+  }
+  drawProjectiles();
+  drawParticles();
+}
+
+let rafRunning = false;
+function loop(ts){
+  if (state.lastTime == null) state.lastTime = ts;
+  const dt = Math.min(50, ts - state.lastTime);
+  state.lastTime = ts;
+  update(dt);
+  render();
+  if (state.running) requestAnimationFrame(loop);
+  else { rafRunning = false; render(); }
+}
+
+document.addEventListener('keydown', (e)=>{
+  if (e.key === '1') trySpawn(0);
+  if (e.key === '2') trySpawn(1);
+  if (e.key === '3') trySpawn(2);
+  if (e.key === 'ArrowUp') { e.preventDefault(); adjustAngle(1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); adjustAngle(-1); }
+});
+
+
+let gameMode = 'MENU';
+
+function startGame(){
+  document.getElementById('mainMenu').style.display = 'none';
+  document.querySelector('.topHud').style.display = 'flex';
+  document.querySelector('.bottomTray').style.display = 'flex';
+  document.querySelector('.crossbowAim').style.display = 'flex';
+  gameMode = 'PLAYING';
+  resetGame();
+}
+
+function showMainMenu(){
+  gameMode = 'MENU';
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('mainMenu').style.display = 'flex';
+  document.querySelector('.topHud').style.display = 'none';
+  document.querySelector('.bottomTray').style.display = 'none';
+  document.querySelector('.crossbowAim').style.display = 'none';
+  state = freshState();
+  render();
+}
+
+resizeCanvas();
+document.querySelector('.topHud').style.display='none';
+document.querySelector('.bottomTray').style.display='none';
+document.querySelector('.crossbowAim').style.display='none';
+document.getElementById('mainMenu').style.display='flex';
+</script>
+</body>
+</html>
