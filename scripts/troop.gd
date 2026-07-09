@@ -91,6 +91,18 @@ func _draw() -> void:
 			body_col = Color(0.65, 0.18, 0.18)
 			wpn_col = Color(0.70, 0.70, 0.75)
 			acc_col = Color(0.90, 0.75, 0.20)
+		"golem":
+			body_col = Color(0.35, 0.35, 0.40)
+			wpn_col = Color(0.45, 0.40, 0.35)
+			acc_col = Color(0.70, 0.20, 0.10)
+		"skeleton":
+			body_col = Color(0.85, 0.82, 0.75)
+			wpn_col = Color(0.60, 0.55, 0.45)
+			acc_col = Color(0.50, 0.30, 0.20)
+		"imp":
+			body_col = Color(0.50, 0.10, 0.15)
+			wpn_col = Color(0.90, 0.55, 0.10)
+			acc_col = Color(0.80, 0.20, 0.10)
 		_:
 			body_col = Color(0.25, 0.45, 0.75)
 			wpn_col = Color(0.55, 0.50, 0.45)
@@ -137,6 +149,16 @@ func _draw() -> void:
 		draw_rect(Rect2(bx - 4.0 * fact, neck_y + 1.0 * fact, 8.0 * fact, body_len - 2.0 * fact), Color(0.35, 0.18, 0.50, 0.4))
 		draw_line(Vector2(bx - 3.0 * fact, neck_y + 2.0), Vector2(bx + 3.0 * fact, neck_y + body_len - 2.0), Color(0.7, 0.6, 0.5, 0.2), 1.0)
 		draw_line(Vector2(bx + 3.0 * fact, neck_y + 2.0), Vector2(bx - 3.0 * fact, neck_y + body_len - 2.0), Color(0.7, 0.6, 0.5, 0.2), 1.0)
+	if key == "golem":
+		draw_rect(Rect2(bx - 5.0 * fact, neck_y + 1.0 * fact, 10.0 * fact, body_len - 2.0 * fact), Color(0, 0, 0, 0.15))
+		draw_rect(Rect2(bx - 5.0 * fact, neck_y + 1.0 * fact, 10.0 * fact, body_len - 2.0 * fact), body_col, false, 1.5)
+	if key == "skeleton":
+		draw_circle(head_c + Vector2(-3.0 * fact, -1.0 * fact), 1.5 * fact, Color(0.1, 0.1, 0.1, 0.8))
+		draw_circle(head_c + Vector2(3.0 * fact, -1.0 * fact), 1.5 * fact, Color(0.1, 0.1, 0.1, 0.8))
+		draw_line(head_c + Vector2(-3.0 * fact, 4.0 * fact), head_c + Vector2(3.0 * fact, 4.0 * fact), Color(0.1, 0.1, 0.1, 0.6), 1.0)
+	if key == "imp":
+		draw_line(head_c + Vector2(-3.0 * fact, -head_r), head_c + Vector2(-6.0 * fact, -head_r - 5.0 * fact), Color(0.3, 0.05, 0.05), 2.0 * fact)
+		draw_line(head_c + Vector2(3.0 * fact, -head_r), head_c + Vector2(6.0 * fact, -head_r - 5.0 * fact), Color(0.3, 0.05, 0.05), 2.0 * fact)
 
 	var shldr := Vector2(bx, neck_y + body_len * 0.15)
 	var hip := Vector2(bx, neck_y + body_len * 0.75)
@@ -199,6 +221,27 @@ func _draw_weapon(key: String, _shldr: Vector2, hand: Vector2, facing: float, wc
 			draw_line(hand + Vector2(-2.0 * fact * facing, -3.0 * fact), hand + Vector2(-2.0 * fact * facing, 3.0 * fact), acol, 2.0 * fact)
 			draw_line(hand, hand - Vector2(3.0 * fact * facing, 0.0), Color(0.35, 0.25, 0.18), 2.0 * fact)
 			draw_circle(tip, 1.0, Color(0.85, 0.85, 0.90))
+		"golem":
+			var tip := hand + Vector2(12.0 * fact * facing, -4.0 * fact)
+			draw_line(hand, tip, Color(0.50, 0.45, 0.40), max(2.0, 3.0 * fact))
+			draw_circle(tip, 3.0 * fact, Color(0.45, 0.40, 0.35))
+		"skeleton":
+			var bow_mid := hand + Vector2(4.0 * facing * fact, 0.0)
+			var bow_top := bow_mid + Vector2(0.0, -10.0 * fact)
+			var bow_bot := bow_mid + Vector2(0.0, 10.0 * fact)
+			draw_line(bow_top, bow_bot, Color(0.70, 0.65, 0.55), 2.0 * fact)
+			draw_arc(bow_mid, 11.0 * fact, -1.3, 1.3, 8, Color(0.75, 0.70, 0.60), 1.5 * fact)
+			draw_line(hand + Vector2(2.0 * facing * fact, 0.0), bow_top + Vector2(0.0, 1.0), Color(0.6, 0.6, 0.6, 0.7), 1.0)
+			draw_line(hand + Vector2(2.0 * facing * fact, 0.0), bow_bot + Vector2(0.0, -1.0), Color(0.6, 0.6, 0.6, 0.7), 1.0)
+		"imp":
+			var staff_top := hand + Vector2(-5.0 * facing * fact, -10.0 * fact)
+			var staff_bot := hand + Vector2(2.0 * facing * fact, 8.0 * fact)
+			draw_line(staff_bot, staff_top, Color(0.40, 0.20, 0.15), 2.0 * fact)
+			draw_circle(staff_top, 4.0 * fact, Color(0.90, 0.40, 0.10, 0.4))
+			draw_circle(staff_top, 2.5 * fact, Color(0.90, 0.55, 0.10))
+			if not flash:
+				draw_circle(staff_top + Vector2(facing * 3.0 * fact, -2.0 * fact), 1.5 * fact, Color(1.0, 0.7, 0.2, 0.9))
+				draw_circle(staff_top + Vector2(facing * -1.0 * fact, 3.0 * fact), 1.0 * fact, Color(0.9, 0.5, 0.1, 0.6))
 
 
 func _bar_w() -> float:

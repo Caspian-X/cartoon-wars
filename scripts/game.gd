@@ -18,6 +18,7 @@ const CROSSBOW_RANGE := 0.75
 const CROSSBOW_DMG := 7.0
 
 const STATE_MENU := "menu"
+const STATE_LEVEL_SELECT := "level_select"
 const STATE_PLAYING := "playing"
 const STATE_OVER := "over"
 
@@ -54,6 +55,32 @@ const TROOP_TYPES: Array = [
 	},
 ]
 
+const ENEMY_TROOP_TYPES: Array = [
+	{
+		"key": "golem", "name": "Golem", "cost": 4, "hp": 80.0, "dmg": 10.0,
+		"atk_interval": 1.2, "range": 0.022, "speed": 0.06, "weapon": "melee",
+		"scale": 0.17, "foot_offset": 0.93,
+	},
+	{
+		"key": "skeleton", "name": "Skeleton", "cost": 3, "hp": 18.0, "dmg": 7.0,
+		"atk_interval": 1.0, "range": 0.14, "speed": 0.10, "weapon": "bow",
+		"scale": 0.13, "foot_offset": 0.93,
+	},
+	{
+		"key": "imp", "name": "Imp", "cost": 5, "hp": 20.0, "dmg": 10.0,
+		"atk_interval": 1.0, "range": 0.14, "speed": 0.12, "weapon": "magic",
+		"scale": 0.10, "foot_offset": 0.93,
+	},
+]
+
+const LEVELS: Array = [
+	{
+		"id": 1, "name": "The Beginning",
+		"desc": "Repel the enemy's monstrous forces!",
+		"enemy_types": [0, 1, 2],
+	},
+]
+
 var state: String = STATE_MENU
 var player_hp: float = BASE_MAX_HP
 var enemy_hp: float = BASE_MAX_HP
@@ -63,6 +90,8 @@ var troops: Array[Troop] = []
 var projectiles: Array[Projectile] = []
 var ai_timer: float = 0.0
 var time_sec: float = 0.0
+var current_level_data: Dictionary = LEVELS[0]
+var current_enemy_types: Array = LEVELS[0]["enemy_types"]
 
 var _player_base: Base
 var _enemy_base: Base
@@ -100,6 +129,8 @@ func _ready() -> void:
 	_hud.aim_changed.connect(_on_aim_changed)
 	_hud.start_requested.connect(start_game)
 	_hud.menu_requested.connect(_show_menu)
+	_hud.level_select_requested.connect(_on_level_select_requested)
+	_hud.level_selected.connect(_on_level_selected)
 	add_child(_hud)
 
 	_reset_round()
@@ -110,6 +141,26 @@ func _show_menu() -> void:
 	state = STATE_MENU
 	_reset_round()
 	_hud.show_menu()
+	_hud.hide_level_select()
+
+
+func _on_level_select_requested() -> void:
+	state = STATE_LEVEL_SELECT
+	_hud.show_level_select(LEVELS)
+
+
+func _on_level_selected(level_id: int) -> void:
+	_hud.hide_level_select()
+	start_level(level_id)
+
+
+func start_level(level_id: int) -> void:
+	for lvl in LEVELS:
+		if lvl["id"] == level_id:
+			current_level_data = lvl
+			current_enemy_types = lvl["enemy_types"]
+			break
+	start_game()
 
 
 func _reset_round() -> void:
@@ -145,6 +196,7 @@ func start_game() -> void:
 	_reset_round()
 	state = STATE_PLAYING
 	_hud.hide_menu()
+	_hud.hide_level_select()
 	_hud.hide_result()
 	_hud.set_gameplay_visible(true)
 
@@ -206,9 +258,7 @@ func _process(dt: float) -> void:
 			troop.update_visuals(dt, time_sec)
 
 	var p_target: Troop = _nearest_crossbow_target("player")
-	var e_target: Troop = _nearest_crossbow_target("enemy")
 	_player_base.update_crossbow(dt, p_target, GROUND_Y, _cb_pivot(_player_base))
-	_enemy_base.update_crossbow(dt, e_target, GROUND_Y, _cb_pivot(_enemy_base))
 	_player_base.queue_redraw()
 	_enemy_base.queue_redraw()
 
@@ -336,16 +386,18 @@ func _ai_decision(dt: float) -> void:
 		return
 	ai_timer = 0.0
 	var affordable: Array[int] = []
-	for i in TROOP_TYPES.size():
-		if float(TROOP_TYPES[i].get("cost", 0)) <= ai_mana:
+	for i in current_enemy_types.size():
+		var type_idx: int = current_enemy_types[i]
+		if float(ENEMY_TROOP_TYPES[type_idx].get("cost", 0)) <= ai_mana:
 			affordable.append(i)
 	if affordable.is_empty():
 		return
 	if randf() > 0.72:
 		return
 	var weights: Array[float] = []
-	for i in affordable:
-		weights.append(3.0 if float(TROOP_TYPES[i].get("cost", 0)) <= 4.0 else 1.0)
+	for j in affordable:
+		var cost: float = float(ENEMY_TROOP_TYPES[current_enemy_types[j]].get("cost", 0))
+		weights.append(3.0 if cost <= 4.0 else 1.0)
 	var total: float = 0.0
 	for w in weights:
 		total += float(w)
@@ -356,13 +408,22 @@ func _ai_decision(dt: float) -> void:
 			pick = affordable[i]
 			break
 		r -= float(weights[i])
-	ai_mana -= float(TROOP_TYPES[pick].get("cost", 0))
-	_spawn_troop("enemy", pick)
+	var chosen_type: int = current_enemy_types[pick]
+	ai_mana -= float(ENEMY_TROOP_TYPES[chosen_type].get("cost", 0))
+	_spawn_enemy_troop(chosen_type)
 
 
 func _spawn_troop(side: String, type_idx: int) -> Troop:
 	var t := Troop.new()
 	t.setup(side, type_idx, TROOP_TYPES[type_idx])
+	_troop_layer.add_child(t)
+	troops.append(t)
+	return t
+
+
+func _spawn_enemy_troop(type_idx: int) -> Troop:
+	var t := Troop.new()
+	t.setup("enemy", type_idx, ENEMY_TROOP_TYPES[type_idx])
 	_troop_layer.add_child(t)
 	troops.append(t)
 	return t
@@ -391,7 +452,9 @@ func _on_aim_changed(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if state == STATE_MENU:
 		if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
-			start_game()
+			_on_level_select_requested()
+		return
+	if state == STATE_LEVEL_SELECT:
 		return
 	if event is InputEventKey and event.pressed:
 		match event.keycode:

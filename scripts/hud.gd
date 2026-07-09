@@ -5,6 +5,8 @@ signal spawn_requested(type_idx: int)
 signal aim_changed(delta: float)
 signal start_requested()
 signal menu_requested()
+signal level_select_requested()
+signal level_selected(level_id: int)
 
 var _root: Control
 var _player_bar_container: Control
@@ -19,6 +21,7 @@ var _mana_fill: ColorRect
 var _mana_label: Label
 var _troop_buttons: Array = []
 var _menu_overlay: Control
+var _level_select_overlay: Control
 var _result_overlay: Control
 var _result_title: Label
 var _result_sub: Label
@@ -43,6 +46,7 @@ func _ready() -> void:
 	_build_bottom_tray()
 	_build_aim_buttons()
 	_build_menu_overlay()
+	_build_level_select_overlay()
 	_build_result_overlay()
 	show_menu()
 
@@ -298,17 +302,100 @@ func _build_menu_overlay() -> void:
 	play.add_theme_stylebox_override("normal", _btn_sb(Color(0.25, 0.45, 0.65, 0.8), Color(0.40, 0.60, 0.80, 0.5)))
 	play.add_theme_stylebox_override("pressed", _btn_sb(Color(0.35, 0.55, 0.75, 0.9), Color(0.50, 0.70, 0.90, 0.6)))
 	play.add_theme_stylebox_override("hover", _btn_sb(Color(0.30, 0.50, 0.70, 0.85), Color(0.45, 0.65, 0.85, 0.55)))
-	play.pressed.connect(_on_play)
+	play.pressed.connect(_on_menu_play)
 	panel.add_child(play)
 
 	var hint := Label.new()
-	hint.text = "Press Enter to start"
+	hint.text = "Press Enter to select level"
 	hint.position = Vector2(0.0, 260.0)
 	hint.size = Vector2(480.0, 24.0)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", 11)
 	hint.add_theme_color_override("font_color", Color(0.40, 0.40, 0.55))
 	panel.add_child(hint)
+
+
+func _build_level_select_overlay() -> void:
+	_level_select_overlay = Control.new()
+	_level_select_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_level_select_overlay.visible = false
+	_root.add_child(_level_select_overlay)
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.04, 0.04, 0.08, 0.82)
+	_level_select_overlay.add_child(dim)
+
+	var panel := _styled_panel(
+		Vector2(VIEW_W * 0.5 - 240.0, VIEW_H * 0.5 - 160.0),
+		Vector2(480.0, 320.0),
+		Color(0.08, 0.08, 0.14, 0.92),
+		Color(0.30, 0.30, 0.50, 0.4),
+		2.0
+	)
+	panel.name = "LevelSelectPanel"
+	_level_select_overlay.add_child(panel)
+
+	var title := Label.new()
+	title.text = "SELECT LEVEL"
+	title.position = Vector2(0.0, 24.0)
+	title.size = Vector2(480.0, 50.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_color_override("font_color", Color(0.90, 0.85, 0.65))
+	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+	title.add_theme_constant_override("shadow_offset_x", 2)
+	title.add_theme_constant_override("shadow_offset_y", 2)
+	panel.add_child(title)
+
+	_level_select_overlay.set_meta("panel", panel)
+	_level_select_overlay.set_meta("btn_start_y", 90.0)
+
+
+func show_level_select(levels: Array) -> void:
+	_menu_overlay.visible = false
+	_result_overlay.visible = false
+	_level_select_overlay.visible = true
+	set_gameplay_visible(false)
+	_rebuild_level_buttons(levels)
+
+
+func hide_level_select() -> void:
+	_level_select_overlay.visible = false
+
+
+func _rebuild_level_buttons(levels: Array) -> void:
+	var panel: Control = _level_select_overlay.get_meta("panel")
+	for c in panel.get_children():
+		if c is Button:
+			c.queue_free()
+	var y: float = float(_level_select_overlay.get_meta("btn_start_y"))
+	for lvl in levels:
+		var btn := Button.new()
+		btn.size = Vector2(320.0, 48.0)
+		btn.position = Vector2(80.0, y)
+		var lvl_name: String = String(lvl.get("name", "Level %d" % lvl.get("id", 0)))
+		var lvl_desc: String = String(lvl.get("desc", ""))
+		btn.text = "%s\n%s" % [lvl_name, lvl_desc]
+		btn.add_theme_font_size_override("font_size", 14)
+		btn.add_theme_color_override("font_color", Color(0.90, 0.90, 0.95))
+		btn.add_theme_stylebox_override("normal", _btn_sb(Color(0.18, 0.20, 0.32, 0.8), Color(0.30, 0.35, 0.55, 0.4)))
+		btn.add_theme_stylebox_override("pressed", _btn_sb(Color(0.28, 0.30, 0.45, 0.9), Color(0.40, 0.45, 0.65, 0.5)))
+		btn.add_theme_stylebox_override("hover", _btn_sb(Color(0.23, 0.25, 0.38, 0.85), Color(0.35, 0.40, 0.60, 0.45)))
+		var lid: int = int(lvl.get("id", 1))
+		btn.pressed.connect(_on_level_btn.bind(lid))
+		panel.add_child(btn)
+		y += 56.0
+
+
+func _on_level_btn(level_id: int) -> void:
+	hide_level_select()
+	level_selected.emit(level_id)
+
+
+func _on_menu_play() -> void:
+	hide_menu()
+	hide_result()
+	level_select_requested.emit()
 
 
 func _build_result_overlay() -> void:
@@ -391,6 +478,7 @@ func _on_play() -> void:
 
 func show_menu() -> void:
 	_menu_overlay.visible = true
+	_level_select_overlay.visible = false
 	_result_overlay.visible = false
 	set_gameplay_visible(false)
 

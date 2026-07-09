@@ -6,6 +6,7 @@ signal bolt_fired(start_pos: Vector2, angle: float, side: String)
 var side: String = "player"
 var hp: float = 180.0
 var max_hp: float = 180.0
+var has_crossbow: bool = true
 var crossbow_angle: float = 0.0
 var fire_timer: float = 0.6
 
@@ -22,6 +23,7 @@ func setup(p_side: String, p_max_hp: float) -> void:
 	max_hp = p_max_hp
 	hp = p_max_hp
 	if side == "enemy":
+		has_crossbow = false
 		_dark = Color(0.62, 0.35, 0.30)
 		_light = Color(0.75, 0.45, 0.40)
 		_trim = Color(0.45, 0.22, 0.18)
@@ -35,6 +37,8 @@ func _process(dt: float) -> void:
 
 
 func update_crossbow(dt: float, target: Troop, _ground_y: float, pivot: Vector2) -> void:
+	if not has_crossbow:
+		return
 	fire_timer -= dt
 	if fire_timer <= 0.0:
 		fire_timer = 1.4 + randf_range(-0.15, 0.15)
@@ -160,7 +164,8 @@ func _draw() -> void:
 	draw_line(Vector2(-22.0, top - 1.0), Vector2(22.0, top - 1.0), Color(1.0, 1.0, 1.0, 0.1), 1.0)
 
 	_draw_flag(top)
-	_draw_crossbow(top)
+	if has_crossbow:
+		_draw_crossbow(top)
 
 
 func _draw_flag(top: float) -> void:
