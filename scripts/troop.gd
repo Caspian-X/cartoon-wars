@@ -59,6 +59,15 @@ func _draw() -> void:
 	var facing: float = 1.0 if side == "player" else -1.0
 	var flash: bool = hit_flash > 0.0 and int(hit_flash * 50.0) % 2 == 0
 
+	# Ground shadow
+	var shadow_w: float = 10.0 * fact
+	var shadow_h: float = 2.5 * fact
+	var shadow_pts := PackedVector2Array()
+	for i in range(8):
+		var ang: float = float(i) / 8.0 * TAU
+		shadow_pts.append(Vector2(cos(ang) * shadow_w, sin(ang) * shadow_h))
+	draw_colored_polygon(shadow_pts, Color(0.0, 0.0, 0.0, 0.25))
+
 	var skin_col := Color(0.95, 0.88, 0.80)
 	var body_col: Color
 	var wpn_col: Color

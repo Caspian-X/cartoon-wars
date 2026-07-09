@@ -1,7 +1,7 @@
 class_name Base
 extends Node2D
 
-signal bolt_fired(start_pos: Vector2, end_pos: Vector2, target: Troop)
+signal bolt_fired(start_pos: Vector2, angle: float, side: String)
 
 var side: String = "player"
 var hp: float = 180.0
@@ -9,13 +9,12 @@ var max_hp: float = 180.0
 var crossbow_angle: float = 0.0
 var fire_timer: float = 0.6
 
-var _dark: Color = Color(0.35, 0.38, 0.41)
-var _light: Color = Color(0.48, 0.51, 0.55)
-var _trim: Color = Color(0.23, 0.25, 0.28)
-var _roof: Color = Color(0.29, 0.23, 0.16)
+var _dark: Color = Color(0.50, 0.55, 0.60)
+var _light: Color = Color(0.65, 0.70, 0.75)
+var _trim: Color = Color(0.35, 0.38, 0.42)
+var _roof: Color = Color(0.42, 0.35, 0.28)
 var _glow: Color = Color(0.0, 0.0, 0.0, 0.0)
-var bg_bar: ColorRect
-var fill_bar: ColorRect
+var _time_sec: float = 0.0
 
 
 func setup(p_side: String, p_max_hp: float) -> void:
@@ -23,27 +22,16 @@ func setup(p_side: String, p_max_hp: float) -> void:
 	max_hp = p_max_hp
 	hp = p_max_hp
 	if side == "enemy":
-		_dark = Color(0.40, 0.16, 0.12)
-		_light = Color(0.55, 0.22, 0.18)
-		_trim = Color(0.28, 0.10, 0.07)
-		_roof = Color(0.32, 0.14, 0.10)
-		_glow = Color(1.0, 0.2, 0.15, 0.15)
+		_dark = Color(0.62, 0.35, 0.30)
+		_light = Color(0.75, 0.45, 0.40)
+		_trim = Color(0.45, 0.22, 0.18)
+		_roof = Color(0.48, 0.28, 0.22)
+		_glow = Color(1.0, 0.3, 0.25, 0.15)
 
 
-func _ready() -> void:
-	bg_bar = ColorRect.new()
-	add_child(bg_bar)
-	fill_bar = ColorRect.new()
-	add_child(fill_bar)
-	bg_bar.size = Vector2(90.0, 10.0)
-	bg_bar.color = Color(0.0, 0.0, 0.0, 0.7)
-	bg_bar.material = null
-	fill_bar.size = Vector2(86.0, 6.0)
-	if side == "player":
-		fill_bar.color = Color(0.40, 0.78, 1.0)
-	else:
-		fill_bar.color = Color(1.0, 0.35, 0.28)
-	_refresh_hp_bar()
+func _process(dt: float) -> void:
+	_time_sec += dt
+	queue_redraw()
 
 
 func update_crossbow(dt: float, target: Troop, _ground_y: float, pivot: Vector2) -> void:
@@ -51,7 +39,7 @@ func update_crossbow(dt: float, target: Troop, _ground_y: float, pivot: Vector2)
 	if fire_timer <= 0.0:
 		fire_timer = 1.4 + randf_range(-0.15, 0.15)
 		if is_instance_valid(target):
-			bolt_fired.emit(pivot, Vector2(target.position.x, target.position.y - 20.0), target)
+			bolt_fired.emit(pivot, crossbow_angle, side)
 
 	if side == "enemy" and is_instance_valid(target):
 		var dx: float = target.position.x - pivot.x
@@ -63,83 +51,124 @@ func update_crossbow(dt: float, target: Troop, _ground_y: float, pivot: Vector2)
 
 func take_damage(amount: float) -> void:
 	hp = max(0.0, hp - amount)
-	_refresh_hp_bar()
-
-
-func _refresh_hp_bar() -> void:
-	var top_y: float = -90.0 - 14.0
-	bg_bar.position = Vector2(-45.0, top_y)
-	fill_bar.position = Vector2(-43.0, top_y + 2.0)
-	var ratio: float = clamp(hp / max_hp, 0.0, 1.0)
-	fill_bar.size.x = 86.0 * ratio
 
 
 func _draw() -> void:
-	var tw: float = 58.0
-	var th: float = 90.0
+	var tw: float = 62.0
+	var th: float = 96.0
 	var top: float = -th
 
-	if _glow.a > 0:
-		draw_circle(Vector2(0.0, -th * 0.45), 60.0, _glow)
+	# Ground shadow
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-tw * 0.5 - 6.0, 0.0),
+		Vector2(-tw * 0.5 - 2.0, -4.0),
+		Vector2(tw * 0.5 + 2.0, -4.0),
+		Vector2(tw * 0.5 + 6.0, 0.0),
+	]), Color(0.0, 0.0, 0.0, 0.25))
 
-	draw_rect(Rect2(-tw * 0.5, top, tw, th), _dark)
+	# Stone foundation
+	var base_h: float = 10.0
+	draw_rect(Rect2(-tw * 0.5 - 3.0, top + th - base_h, tw + 6.0, base_h), _trim)
+	for i in range(5):
+		var sx: float = -tw * 0.5 - 3.0 + (tw + 6.0) * i / 5.0
+		draw_line(Vector2(sx, top + th - base_h), Vector2(sx, top + th), Color(0, 0, 0, 0.15), 1.0)
+		draw_line(Vector2(sx, top + th - base_h), Vector2(sx + (tw + 6.0) / 10.0, top + th - base_h), Color(0, 0, 0, 0.15), 1.0)
 
-	var rng := RandomNumberGenerator.new()
-	for _b in range(14):
-		var bx: float = rng.randf_range(-tw * 0.5 + 2.0, tw * 0.5 - 2.0)
-		var by: float = rng.randf_range(top + 4.0, top + th - 6.0)
-		var bw: float = rng.randf_range(6.0, 14.0)
-		var bh: float = rng.randf_range(4.0, 8.0)
-		draw_rect(Rect2(bx, by, bw, bh), Color(0, 0, 0, 0.08))
+	# Main tower body with left-side shading
+	var body_steps: int = 12
+	for i in body_steps:
+		var t: float = float(i) / float(body_steps)
+		var y: float = top + t * th
+		var h_step: float = th / float(body_steps) + 1.0
+		var shade: float = lerp(1.0, 0.72, t)
+		draw_rect(Rect2(-tw * 0.5, y, tw, h_step), _dark * shade)
 
-	for r in range(1, 7):
-		var y: float = top + (th / 7.0) * r
-		draw_line(Vector2(-tw * 0.5, y), Vector2(tw * 0.5, y), Color(0, 0, 0, 0.10), 1.0)
+	# Brick pattern (mortar lines)
+	var brick_h: float = 8.0
+	var rows: int = int(th / brick_h)
+	for r in rows:
+		var y: float = top + r * brick_h
+		var offset: float = (r % 2) * 8.0
+		var cols: int = int(tw / 14.0)
+		for c in cols:
+			var bx: float = -tw * 0.5 + 3.0 + c * 14.0 + offset
+			if bx + 10.0 > tw * 0.5 - 3.0:
+				continue
+			# subtle brick shadow
+			draw_rect(Rect2(bx + 1.0, y + 1.0, 10.0, brick_h - 1.0), Color(0, 0, 0, 0.06))
+		draw_line(Vector2(-tw * 0.5 + 2.0, y), Vector2(tw * 0.5 - 2.0, y), Color(0, 0, 0, 0.12), 1.0)
 
+	# Outer border
 	draw_rect(Rect2(-tw * 0.5, top, tw, th), _trim, false, 2.5)
 
-	var door_w: float = 18.0
-	var door_h: float = 26.0
-	var door_top: float = top + th - door_h
+	# Door
+	var door_w: float = 20.0
+	var door_h: float = 28.0
+	var door_top: float = top + th - base_h - door_h
+	# Door frame
+	draw_rect(Rect2(-door_w * 0.5 - 2.0, door_top, door_w + 4.0, door_h + 2.0), _trim)
+	# Wood door
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(-door_w * 0.5, door_top + door_h),
-		Vector2(-door_w * 0.5, door_top + 8.0),
+		Vector2(-door_w * 0.5, door_top + 10.0),
 		Vector2(-door_w * 0.4, door_top),
 		Vector2(door_w * 0.4, door_top),
-		Vector2(door_w * 0.5, door_top + 8.0),
+		Vector2(door_w * 0.5, door_top + 10.0),
 		Vector2(door_w * 0.5, door_top + door_h),
-	]), Color(0.08, 0.06, 0.05))
-	draw_arc(Vector2(0.0, door_top + 8.0), door_w * 0.6, PI, 0.0, 8, Color(0.15, 0.12, 0.10), 1.5)
-	draw_line(Vector2(-door_w * 0.5, door_top + door_h), Vector2(-door_w * 0.5, door_top + 8.0), Color(0.15, 0.12, 0.10), 1.5)
-	draw_line(Vector2(door_w * 0.5, door_top + door_h), Vector2(door_w * 0.5, door_top + 8.0), Color(0.15, 0.12, 0.10), 1.5)
+	]), Color(0.12, 0.09, 0.06))
+	# Door arch
+	draw_arc(Vector2(0.0, door_top + 10.0), door_w * 0.6, PI, 0.0, 8, Color(0.18, 0.14, 0.10), 1.5)
+	# Iron bands
+	draw_line(Vector2(-door_w * 0.5, door_top + door_h * 0.35), Vector2(door_w * 0.5, door_top + door_h * 0.35), Color(0.15, 0.12, 0.10), 1.5)
+	draw_line(Vector2(-door_w * 0.5, door_top + door_h * 0.70), Vector2(door_w * 0.5, door_top + door_h * 0.70), Color(0.15, 0.12, 0.10), 1.5)
 
-	var win_y: float = top + th * 0.3
-	var win_w: float = 8.0
-	var win_h: float = 12.0
-	for wx in [-12.0, 12.0]:
-		draw_rect(Rect2(wx - win_w * 0.5, win_y, win_w, win_h), Color(0.15, 0.10, 0.08))
-		draw_rect(Rect2(wx - win_w * 0.5 + 1.0, win_y + 1.0, win_w - 2.0, win_h - 2.0), Color(1.0, 0.90, 0.55, 0.3))
-		draw_line(Vector2(wx, win_y + 1.0), Vector2(wx, win_y + win_h - 1.0), Color(0.12, 0.08, 0.06), 1.0)
-		draw_line(Vector2(wx - win_w * 0.5 + 1.0, win_y + win_h * 0.5), Vector2(wx + win_w * 0.5 - 1.0, win_y + win_h * 0.5), Color(0.12, 0.08, 0.06), 1.0)
+	# Windows with warm glow
+	var win_y: float = top + th * 0.28
+	var win_w: float = 9.0
+	var win_h: float = 14.0
+	for wx in [-13.0, 13.0]:
+		# Window frame
+		draw_rect(Rect2(wx - win_w * 0.5 - 1.0, win_y - 1.0, win_w + 2.0, win_h + 2.0), _trim)
+		# Inner dark
+		draw_rect(Rect2(wx - win_w * 0.5, win_y, win_w, win_h), Color(0.08, 0.06, 0.04))
+		# Warm light glow
+		var glow_c: Color = Color(1.0, 0.85, 0.40, 0.35) if side == "player" else Color(1.0, 0.45, 0.25, 0.35)
+		draw_circle(Vector2(wx, win_y + win_h * 0.5), 5.0, glow_c)
+		draw_rect(Rect2(wx - win_w * 0.5 + 1.0, win_y + 1.0, win_w - 2.0, win_h - 2.0), glow_c)
+		# Cross bars
+		draw_line(Vector2(wx, win_y + 1.0), Vector2(wx, win_y + win_h - 1.0), Color(0.10, 0.08, 0.06), 1.0)
+		draw_line(Vector2(wx - win_w * 0.5 + 1.0, win_y + win_h * 0.5), Vector2(wx + win_w * 0.5 - 1.0, win_y + win_h * 0.5), Color(0.10, 0.08, 0.06), 1.0)
 
+	# Battlements
 	for i in range(-1, 2):
-		var cx: float = i * 14.0
+		var cx: float = i * 15.0
 		var merlon_h: float = 10.0
-		draw_rect(Rect2(cx - 6.0, top - merlon_h, 12.0, merlon_h), _light)
-		draw_rect(Rect2(cx - 6.0, top - merlon_h, 12.0, merlon_h), _trim, false, 1.5)
-		draw_circle(Vector2(cx, top - merlon_h + 3.0), 1.5, Color(0.9, 0.9, 0.9, 0.3))
+		var mw: float = 12.0
+		# Merlon shadow
+		draw_rect(Rect2(cx - mw * 0.5 + 1.0, top - merlon_h + 1.0, mw, merlon_h), Color(0, 0, 0, 0.15))
+		draw_rect(Rect2(cx - mw * 0.5, top - merlon_h, mw, merlon_h), _light)
+		draw_rect(Rect2(cx - mw * 0.5, top - merlon_h, mw, merlon_h), _trim, false, 1.5)
+		# Highlight top
+		draw_line(Vector2(cx - mw * 0.5 + 1.0, top - merlon_h + 1.0), Vector2(cx + mw * 0.5 - 1.0, top - merlon_h + 1.0), Color(1.0, 1.0, 1.0, 0.15), 1.0)
+		# Crenel detail
+		draw_circle(Vector2(cx, top - merlon_h + 3.0), 1.5, Color(0.9, 0.9, 0.9, 0.25))
 
-	draw_rect(Rect2(-20.0, top - 2.0, 40.0, 5.0), _roof)
-	draw_line(Vector2(-22.0, top - 2.0), Vector2(22.0, top - 2.0), _trim, 2.0)
+	# Roof / cornice
+	draw_rect(Rect2(-22.0, top - 2.0, 44.0, 5.0), _roof)
+	draw_line(Vector2(-24.0, top - 2.0), Vector2(24.0, top - 2.0), _trim, 2.0)
+	# Roof highlight
+	draw_line(Vector2(-22.0, top - 1.0), Vector2(22.0, top - 1.0), Color(1.0, 1.0, 1.0, 0.1), 1.0)
 
 	_draw_flag(top)
 	_draw_crossbow(top)
 
 
 func _draw_flag(top: float) -> void:
-	var pole_top: float = top - 22.0
-	draw_line(Vector2(0.0, top - 2.0), Vector2(0.0, pole_top), Color(0.4, 0.35, 0.3), 2.0)
-	draw_circle(Vector2(0.0, pole_top), 1.5, Color(0.6, 0.55, 0.5))
+	var pole_top: float = top - 26.0
+	# Flag pole
+	draw_line(Vector2(0.0, top - 2.0), Vector2(0.0, pole_top), Color(0.45, 0.40, 0.35), 2.5)
+	# Pole finial
+	draw_circle(Vector2(0.0, pole_top), 2.0, Color(0.7, 0.65, 0.55))
 
 	var flag_color: Color
 	var flag_icon_color: Color
@@ -150,24 +179,27 @@ func _draw_flag(top: float) -> void:
 		flag_color = Color(0.75, 0.20, 0.15)
 		flag_icon_color = Color(1.0, 0.85, 0.70)
 
+	# Animated waving flag
+	var wave: float = sin(_time_sec * 3.0) * 2.0
+	var wave2: float = sin(_time_sec * 3.0 + 1.0) * 1.5
 	var flag_points := PackedVector2Array([
 		Vector2(0.0, pole_top + 2.0),
-		Vector2(22.0, pole_top + 10.0),
-		Vector2(0.0, pole_top + 18.0),
+		Vector2(24.0, pole_top + 10.0 + wave),
+		Vector2(0.0, pole_top + 18.0 + wave2),
 	])
 	draw_colored_polygon(flag_points, flag_color)
 	draw_polyline(PackedVector2Array([flag_points[0], flag_points[1], flag_points[2]]), Color(0, 0, 0, 0.25), 1.0)
 
 	if side == "player":
-		draw_line(Vector2(6.0, pole_top + 6.0), Vector2(6.0, pole_top + 14.0), flag_icon_color, 2.0)
-		draw_line(Vector2(6.0, pole_top + 6.0), Vector2(14.0, pole_top + 10.0), flag_icon_color, 2.0)
-		draw_line(Vector2(6.0, pole_top + 14.0), Vector2(14.0, pole_top + 10.0), flag_icon_color, 2.0)
+		draw_line(Vector2(7.0, pole_top + 7.0 + wave * 0.3), Vector2(7.0, pole_top + 15.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(7.0, pole_top + 7.0 + wave * 0.3), Vector2(15.0, pole_top + 11.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(7.0, pole_top + 15.0 + wave * 0.3), Vector2(15.0, pole_top + 11.0 + wave * 0.3), flag_icon_color, 2.0)
 	else:
-		draw_line(Vector2(5.0, pole_top + 6.0), Vector2(5.0, pole_top + 14.0), flag_icon_color, 2.0)
-		draw_line(Vector2(5.0, pole_top + 6.0), Vector2(13.0, pole_top + 10.0), flag_icon_color, 2.0)
-		draw_line(Vector2(5.0, pole_top + 14.0), Vector2(13.0, pole_top + 10.0), flag_icon_color, 2.0)
-		draw_line(Vector2(5.0, pole_top + 10.0), Vector2(13.0, pole_top + 6.0), flag_icon_color, 2.0)
-		draw_line(Vector2(5.0, pole_top + 10.0), Vector2(13.0, pole_top + 14.0), flag_icon_color, 2.0)
+		draw_line(Vector2(6.0, pole_top + 7.0 + wave * 0.3), Vector2(6.0, pole_top + 15.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(6.0, pole_top + 7.0 + wave * 0.3), Vector2(14.0, pole_top + 11.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(6.0, pole_top + 15.0 + wave * 0.3), Vector2(14.0, pole_top + 11.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(6.0, pole_top + 11.0 + wave * 0.3), Vector2(14.0, pole_top + 7.0 + wave * 0.3), flag_icon_color, 2.0)
+		draw_line(Vector2(6.0, pole_top + 11.0 + wave * 0.3), Vector2(14.0, pole_top + 15.0 + wave * 0.3), flag_icon_color, 2.0)
 
 
 func _draw_crossbow(top: float) -> void:
@@ -181,24 +213,34 @@ func _draw_crossbow(top: float) -> void:
 	t.origin = pivot
 	draw_set_transform_matrix(t)
 
-	draw_rect(Rect2(-2.0, -5.0, 30.0, 10.0), Color(0.35, 0.22, 0.10))
-	draw_rect(Rect2(-2.0, -5.0, 30.0, 10.0), Color(0.20, 0.12, 0.05), false, 1.0)
+	# Main stock
+	draw_rect(Rect2(-3.0, -6.0, 34.0, 12.0), Color(0.38, 0.24, 0.12))
+	draw_rect(Rect2(-3.0, -6.0, 34.0, 12.0), Color(0.20, 0.12, 0.05), false, 1.0)
+	# Stock highlight
+	draw_line(Vector2(-2.0, -5.0), Vector2(30.0, -5.0), Color(1.0, 1.0, 1.0, 0.08), 1.0)
 
-	draw_rect(Rect2(24.0, -10.0, 8.0, 20.0), Color(0.30, 0.18, 0.08))
+	# Tiller / handle
+	draw_rect(Rect2(26.0, -12.0, 10.0, 24.0), Color(0.32, 0.20, 0.10))
+	draw_rect(Rect2(26.0, -12.0, 10.0, 24.0), Color(0.18, 0.10, 0.04), false, 1.0)
 
-	draw_line(Vector2(8.0, -5.0), Vector2(32.0, -5.0), Color(0.15, 0.10, 0.05), 1.5)
-	draw_line(Vector2(8.0, 5.0), Vector2(32.0, 5.0), Color(0.15, 0.10, 0.05), 1.5)
+	# Bow limbs
+	draw_line(Vector2(10.0, -6.0), Vector2(34.0, -6.0), Color(0.15, 0.10, 0.05), 1.5)
+	draw_line(Vector2(10.0, 6.0), Vector2(34.0, 6.0), Color(0.15, 0.10, 0.05), 1.5)
 
-	draw_arc(Vector2(32.0, 0.0), 18.0, -1.2, 1.2, 14, Color(0.55, 0.55, 0.60), 3.5)
-	draw_arc(Vector2(32.0, 0.0), 18.0, -1.2, 1.2, 14, Color(0.35, 0.35, 0.40), 1.5, true)
+	# Bow arc (prow)
+	draw_arc(Vector2(34.0, 0.0), 20.0, -1.2, 1.2, 16, Color(0.60, 0.60, 0.65), 3.5)
+	draw_arc(Vector2(34.0, 0.0), 20.0, -1.2, 1.2, 16, Color(0.35, 0.35, 0.40), 1.5, true)
 
-	draw_line(Vector2(6.0, 0.0), Vector2(30.0, 0.0), Color(0.35, 0.23, 0.12), 2.0)
+	# Bowstring
+	draw_line(Vector2(8.0, 0.0), Vector2(32.0, 0.0), Color(0.35, 0.23, 0.12), 2.0)
 
-	draw_line(Vector2(6.0, 0.0), Vector2(28.0, -6.0), Color(0.50, 0.50, 0.55, 0.8), 1.5)
-	draw_line(Vector2(6.0, 0.0), Vector2(28.0, 6.0), Color(0.50, 0.50, 0.55, 0.8), 1.5)
+	# String tension lines
+	draw_line(Vector2(8.0, 0.0), Vector2(30.0, -7.0), Color(0.50, 0.50, 0.55, 0.8), 1.5)
+	draw_line(Vector2(8.0, 0.0), Vector2(30.0, 7.0), Color(0.50, 0.50, 0.55, 0.8), 1.5)
 
-	var bolt_tip := PackedVector2Array([Vector2(36.0, 0.0), Vector2(31.0, -4.0), Vector2(31.0, 4.0)])
-	draw_colored_polygon(bolt_tip, Color(0.65, 0.65, 0.70))
+	# Bolt loaded
+	var bolt_tip := PackedVector2Array([Vector2(38.0, 0.0), Vector2(32.0, -4.5), Vector2(32.0, 4.5)])
+	draw_colored_polygon(bolt_tip, Color(0.70, 0.70, 0.75))
 	draw_polyline(PackedVector2Array([bolt_tip[0], bolt_tip[1], bolt_tip[0], bolt_tip[2]]), Color(0.35, 0.35, 0.40), 1.0)
 
 	draw_set_transform_matrix(Transform2D())

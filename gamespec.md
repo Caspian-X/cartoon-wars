@@ -4,7 +4,7 @@
 > **Cartoon Wars** is a 2D lane-based strategy game where two bases (player vs AI enemy) send stick-figure troops down a single lane to destroy each other. The player spends regenerating mana to spawn troop types, aims a crossbow turret to pick off approaching enemies, and wins by reducing the enemy base HP to zero before theirs falls. Inspired by the classic "Stick War" web game.
 
 ## Core Concepts / Glossary
-- **Base** — A tower at each end of the lane (player left, enemy right) with HP, a door, battlements, and a mounted crossbow that auto-fires at approaching troops.
+- **Base** — A tower at each end of the lane (player left, enemy right) with HP, a door, battlements, and a mounted crossbow that fires in its current aim direction.
 - **Lane** — The horizontal strip of ground between the two bases where troops walk and fight. Defined by `LANE_MIN` (left) and `LANE_MAX` (right) in pixels; troops use a `frac` (0..1) position along this lane.
 - **Troop** — A unit spawned by either side. Has HP, damage, attack interval, range (fraction of lane), speed (fraction/sec), weapon type, and a sprite. Walks toward the enemy base; stops to attack enemies in range or the base itself when in range.
 - **Mana** — The resource used to spawn troops. Regenerates over time (1 per 1.8s, max 10). Both player and AI have separate mana pools.
@@ -61,10 +61,10 @@
 11. R11: Troops have a hit-flash (0.12s white blink) when damaged.
 
 ### Crossbows
-12. R12: Each base has a crossbow that fires every ~1.4s (±0.15s jitter) at the nearest enemy troop within 75% of the lane.
-13. R13: Player crossbow angle is controlled manually (Up/Down keys or buttons, ±0.05 rad, clamped to [-0.4, 0.8]).
+12. R12: Each base has a crossbow that fires every ~1.4s (±0.15s jitter) when an enemy troop is within 75% of the lane. The bolt fires in the crossbow's current aim direction; it does not home in on the target.
+13. R13: Player crossbow angle is controlled manually (Up/Down keys or buttons, ±0.05 rad, clamped to [-0.4, 0.8]). Up aims the crossbow upward and Down aims it downward.
 14. R14: Enemy crossbow auto-tracks its target's angle (lerp factor 0.06).
-15. R15: Crossbow bolts deal 7 damage and spawn hit particles on the target.
+15. R15: Crossbow bolts travel with gravity (900 px/s²) at a reduced speed (~420 px/s). They deal 7 damage to the first troop they hit within 20 pixels and spawn hit particles; otherwise they disappear when they hit the ground.
 
 ### Victory/Defeat
 16. R16: The game ends when either base reaches 0 HP. Enemy at 0 = Victory; Player at 0 = Defeat.
@@ -104,7 +104,7 @@
 - **Aim buttons**: Styled Up/Down buttons in a bordered panel (bottom-left) for player crossbow angle.
 - **Menu overlay**: Dark dim + styled bordered panel with "CARTOON WARS" title, controls hint, PLAY button, and "Press Enter to start" hint.
 - **Result overlay**: Dark dim + styled bordered panel with Victory!/Defeat... title (colored), subtitle, Play Again + Main Menu styled buttons.
-- **In-game visuals**: Sky gradient with mountains and hills, sun, varied clouds, grass tufts, two stone towers with flags/windows/battlements/improved crossbows, procedural stick-figure troops with weapons (spear/bow/staff/sword) and walk/attack animations, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
+- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, procedural stick-figure troops with weapons (spear/bow/staff/sword) and walk/attack animations, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
 - **Controls**: 1-4 = spawn troops, Up/Down = aim crossbow, R = restart, Enter = start from menu.
 
 ## Open Questions / TODOs

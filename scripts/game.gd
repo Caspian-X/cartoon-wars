@@ -218,8 +218,17 @@ func _process(dt: float) -> void:
 			continue
 		var reached: bool = p.update_progress(dt)
 		p.queue_redraw()
+		if p.kind == "bolt" and not reached:
+			if p.physics_pos.y >= GROUND_Y:
+				reached = true
+			else:
+				var hit := _nearest_troop_in_range(p.physics_pos, 20.0, p.side)
+				if is_instance_valid(hit):
+					hit.take_damage(p.damage)
+					_spawn_hit_particles(hit, true, p.kind)
+					reached = true
 		if reached:
-			if is_instance_valid(p.target) and p.target.alive:
+			if p.kind != "bolt" and is_instance_valid(p.target) and p.target.alive:
 				p.target.take_damage(p.damage)
 				_spawn_hit_particles(p.target, true, p.kind)
 			p.queue_free()
@@ -248,7 +257,7 @@ func _process(dt: float) -> void:
 
 
 func _cb_pivot(b: Base) -> Vector2:
-	return Vector2(b.position.x, b.position.y - 78.0 - 4.0)
+	return Vector2(b.position.x, b.position.y - 100.0)
 
 
 func _spawn_projectile(troop: Troop, target: Troop, d: Dictionary) -> void:
@@ -262,9 +271,9 @@ func _spawn_projectile(troop: Troop, target: Troop, d: Dictionary) -> void:
 	projectiles.append(p)
 
 
-func _on_bolt_fired(start_pos: Vector2, end_pos: Vector2, target: Troop) -> void:
+func _on_bolt_fired(start_pos: Vector2, angle: float, side: String) -> void:
 	var p := Projectile.new()
-	p.setup(start_pos, end_pos, target, CROSSBOW_DMG, "bolt", 1.0 / 0.25)
+	p.setup(start_pos, Vector2.ZERO, null, CROSSBOW_DMG, "bolt", 0.0, angle, side)
 	_proj_layer.add_child(p)
 	projectiles.append(p)
 
@@ -286,6 +295,19 @@ func _nearest_enemy(troop: Troop) -> Troop:
 		var dist: float = abs(o.frac - troop.frac)
 		var ahead: bool = (troop.side == "player" and o.frac >= troop.frac) or (troop.side == "enemy" and o.frac <= troop.frac)
 		if ahead and dist < best_dist:
+			best_dist = dist
+			best = o
+	return best
+
+
+func _nearest_troop_in_range(pos: Vector2, radius: float, side: String) -> Troop:
+	var best: Troop = null
+	var best_dist: float = radius
+	for o in troops:
+		if not is_instance_valid(o) or not o.alive or o.side == side:
+			continue
+		var dist: float = pos.distance_to(o.position)
+		if dist < best_dist:
 			best_dist = dist
 			best = o
 	return best
@@ -377,20 +399,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_2: try_spawn(1)
 			KEY_3: try_spawn(2)
 			KEY_4: try_spawn(3)
-			KEY_UP: _on_aim_changed(0.05)
-			KEY_DOWN: _on_aim_changed(-0.05)
+			KEY_UP: _on_aim_changed(-0.05)
+			KEY_DOWN: _on_aim_changed(0.05)
 			KEY_R: start_game()
 
 
 func _draw() -> void:
 	var sky_steps := 60
 	var sky_grad := Gradient.new()
-	sky_grad.set_color(0, Color(0.18, 0.28, 0.52))
+	sky_grad.set_color(0, Color(0.25, 0.42, 0.72))
 	sky_grad.set_offset(0, 0.0)
-	sky_grad.set_color(1, Color(0.82, 0.92, 0.98))
+	sky_grad.set_color(1, Color(0.88, 0.96, 1.0))
 	sky_grad.set_offset(1, 1.0)
-	sky_grad.add_point(0.3, Color(0.29, 0.52, 0.80))
-	sky_grad.add_point(0.6, Color(0.56, 0.78, 0.95))
+	sky_grad.add_point(0.3, Color(0.42, 0.65, 0.92))
+	sky_grad.add_point(0.6, Color(0.65, 0.85, 0.98))
 	for i in sky_steps:
 		var t: float = float(i) / float(sky_steps)
 		draw_rect(Rect2(0.0, t * GROUND_Y, VIEW_W, GROUND_Y / float(sky_steps) + 1.0), sky_grad.sample(t))
@@ -403,18 +425,41 @@ func _draw() -> void:
 	var grass_steps := 40
 	for i in grass_steps:
 		var t: float = float(i) / float(grass_steps)
-		var c: Color = Color(0.42, 0.70, 0.28).lerp(Color(0.26, 0.55, 0.18), t)
+		var c: Color = Color(0.48, 0.74, 0.32).lerp(Color(0.30, 0.58, 0.20), t)
 		draw_rect(Rect2(0.0, GROUND_Y + t * (VIEW_H - GROUND_Y), VIEW_W, (VIEW_H - GROUND_Y) / float(grass_steps) + 1.0), c)
 
-	draw_line(Vector2(0.0, GROUND_Y), Vector2(VIEW_W, GROUND_Y), Color(0.15, 0.30, 0.10, 0.6), 3.0)
+	# Dirt path in the lane
+	var path_top: float = GROUND_Y + 2.0
+	var path_bot: float = GROUND_Y + 18.0
+	var path_grad_steps: int = 8
+	for i in path_grad_steps:
+		var t: float = float(i) / float(path_grad_steps)
+		var path_c: Color = Color(0.62, 0.52, 0.35).lerp(Color(0.45, 0.36, 0.24), t)
+		var alpha: float = 0.50 * (1.0 - t * 0.5)
+		draw_rect(Rect2(LANE_MIN - 20.0, path_top + t * (path_bot - path_top), LANE_LEN + 40.0, (path_bot - path_top) / float(path_grad_steps) + 1.0), Color(path_c.r, path_c.g, path_c.b, alpha))
+
+	# Path edges
+	draw_line(Vector2(LANE_MIN - 20.0, path_top), Vector2(LANE_MIN - 20.0, path_bot), Color(0.40, 0.32, 0.20, 0.35), 2.0)
+	draw_line(Vector2(LANE_MAX + 20.0, path_top), Vector2(LANE_MAX + 20.0, path_bot), Color(0.40, 0.32, 0.20, 0.35), 2.0)
+
+	# Atmospheric haze at horizon
+	draw_rect(Rect2(0.0, GROUND_Y - 8.0, VIEW_W, 12.0), Color(0.80, 0.90, 1.0, 0.15))
+
+	draw_line(Vector2(0.0, GROUND_Y), Vector2(VIEW_W, GROUND_Y), Color(0.18, 0.35, 0.12, 0.65), 3.0)
 	_draw_grass_tufts()
+	_draw_ground_details()
 
 
 func _draw_sun() -> void:
 	var sun_pos := Vector2(VIEW_W * 0.88, VIEW_H * 0.12)
+	# Outer glow
+	draw_circle(sun_pos, 56.0, Color(1.0, 0.95, 0.75, 0.05))
+	draw_circle(sun_pos, 44.0, Color(1.0, 0.95, 0.75, 0.08))
 	draw_circle(sun_pos, 32.0, Color(1.0, 0.95, 0.75, 0.12))
 	draw_circle(sun_pos, 24.0, Color(1.0, 0.96, 0.80, 0.25))
+	# Core
 	draw_circle(sun_pos, 16.0, Color(1.0, 0.98, 0.86, 0.9))
+	draw_circle(sun_pos, 10.0, Color(1.0, 1.0, 0.95, 0.95))
 
 
 func _draw_clouds() -> void:
@@ -426,17 +471,23 @@ func _draw_clouds() -> void:
 
 
 func _draw_cloud(pos: Vector2, s: float) -> void:
-	var c := Color(1.0, 1.0, 1.0, 0.80)
+	var c := Color(1.0, 1.0, 1.0, 0.85)
+	var c_dark := Color(0.92, 0.94, 0.98, 0.50)
+	# Puffy cloud using multiple overlapping circles
+	draw_circle(pos + Vector2(0.0, 2.0 * s), 20.0 * s, c_dark)
 	draw_circle(pos, 18.0 * s, c)
-	draw_circle(pos + Vector2(26.0 * s, 4.0 * s), 14.0 * s, c)
-	draw_circle(pos + Vector2(-24.0 * s, 6.0 * s), 12.0 * s, c)
-	draw_circle(pos + Vector2(-10.0 * s, -6.0 * s), 10.0 * s, c)
-	draw_circle(pos + Vector2(14.0 * s, -3.0 * s), 11.0 * s, c)
+	draw_circle(pos + Vector2(28.0 * s, 4.0 * s), 16.0 * s, c)
+	draw_circle(pos + Vector2(-26.0 * s, 6.0 * s), 14.0 * s, c)
+	draw_circle(pos + Vector2(-12.0 * s, -6.0 * s), 12.0 * s, c)
+	draw_circle(pos + Vector2(16.0 * s, -3.0 * s), 13.0 * s, c)
+	draw_circle(pos + Vector2(6.0 * s, -8.0 * s), 10.0 * s, c)
+	draw_circle(pos + Vector2(-4.0 * s, 10.0 * s), 9.0 * s, c)
+	draw_circle(pos + Vector2(22.0 * s, 10.0 * s), 8.0 * s, c)
 
 
 func _draw_mountains() -> void:
-	var mount_color := Color(0.28, 0.32, 0.40, 0.5)
-	var snow_color := Color(0.90, 0.93, 0.98, 0.4)
+	var mount_color := Color(0.35, 0.40, 0.52, 0.55)
+	var snow_color := Color(0.92, 0.95, 1.0, 0.45)
 	var peaks: Array[Array] = [
 		[50.0, GROUND_Y, -55.0, -140.0, 60.0],
 		[170.0, GROUND_Y, -40.0, -110.0, 80.0],
@@ -466,7 +517,7 @@ func _draw_mountains() -> void:
 			Vector2(px + lx * 0.15, py + ly * 0.35),
 		]), snow_color)
 
-	var hill_color := Color(0.35, 0.50, 0.25, 0.6)
+	var hill_color := Color(0.40, 0.55, 0.30, 0.65)
 	for h in [[0.0, GROUND_Y, 180.0, -45.0], [150.0, GROUND_Y, 120.0, -35.0],
 			  [320.0, GROUND_Y, 150.0, -40.0], [500.0, GROUND_Y, 140.0, -30.0],
 			  [670.0, GROUND_Y, 160.0, -50.0], [850.0, GROUND_Y, 130.0, -35.0],
@@ -477,7 +528,7 @@ func _draw_mountains() -> void:
 
 
 func _draw_hills() -> void:
-	var hill := Color(0.38, 0.56, 0.28, 0.35)
+	var hill := Color(0.45, 0.62, 0.32, 0.40)
 	for h in [[-20.0, GROUND_Y, 200.0, -30.0], [250.0, GROUND_Y, 180.0, -25.0],
 			  [480.0, GROUND_Y, 220.0, -35.0], [750.0, GROUND_Y, 190.0, -28.0],
 			  [980.0, GROUND_Y, 210.0, -32.0], [1200.0, GROUND_Y, 180.0, -25.0]]:
@@ -489,9 +540,34 @@ func _draw_hills() -> void:
 func _draw_grass_tufts() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 42
-	var grass_color := Color(0.22, 0.45, 0.14, 0.5)
-	for i in range(60):
+	var grass_colors := [Color(0.22, 0.45, 0.14, 0.5), Color(0.18, 0.40, 0.12, 0.45), Color(0.28, 0.50, 0.18, 0.4)]
+	for i in range(80):
 		var gx: float = rng.randf() * VIEW_W
-		var gh: float = 4.0 + rng.randf() * 8.0
-		var lean: float = (rng.randf() - 0.5) * 3.0
-		draw_line(Vector2(gx, GROUND_Y), Vector2(gx + lean, GROUND_Y - gh), grass_color, 1.5)
+		var gh: float = 4.0 + rng.randf() * 10.0
+		var lean: float = (rng.randf() - 0.5) * 4.0
+		var col: Color = grass_colors[i % 3]
+		var thick: float = 1.0 + rng.randf() * 1.0
+		draw_line(Vector2(gx, GROUND_Y), Vector2(gx + lean, GROUND_Y - gh), col, thick)
+		# Second blade
+		if rng.randf() > 0.5:
+			draw_line(Vector2(gx, GROUND_Y), Vector2(gx + lean * 0.7 + 1.0, GROUND_Y - gh * 0.8), col, thick * 0.7)
+
+
+func _draw_ground_details() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 123
+	# Small rocks
+	for i in range(12):
+		var rx: float = rng.randf() * VIEW_W
+		var ry: float = GROUND_Y + 2.0 + rng.randf() * 8.0
+		var rs: float = 2.0 + rng.randf() * 3.0
+		var rock_col: Color = Color(0.35 + rng.randf() * 0.1, 0.32 + rng.randf() * 0.08, 0.28 + rng.randf() * 0.05, 0.6)
+		draw_circle(Vector2(rx, ry), rs, rock_col)
+		draw_circle(Vector2(rx + 1.0, ry - 1.0), rs * 0.6, Color(rock_col.r + 0.05, rock_col.g + 0.05, rock_col.b + 0.05, rock_col.a))
+	# Tiny flowers
+	for i in range(8):
+		var fx: float = rng.randf() * VIEW_W
+		var fy: float = GROUND_Y + 1.0 + rng.randf() * 4.0
+		var fcol: Color = Color(0.85 + rng.randf() * 0.15, 0.70 + rng.randf() * 0.2, 0.20 + rng.randf() * 0.3, 0.7)
+		draw_circle(Vector2(fx, fy), 2.0, fcol)
+		draw_line(Vector2(fx, fy), Vector2(fx, fy + 3.0), Color(0.22, 0.45, 0.14, 0.6), 1.0)

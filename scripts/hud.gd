@@ -204,7 +204,7 @@ func _build_aim_buttons() -> void:
 	_aim_up.add_theme_stylebox_override("normal", _btn_sb(Color(0.20, 0.25, 0.35, 0.6), Color(0.30, 0.40, 0.55, 0.4)))
 	_aim_up.add_theme_stylebox_override("pressed", _btn_sb(Color(0.30, 0.40, 0.55, 0.8), Color(0.40, 0.50, 0.65, 0.5)))
 	_aim_up.add_theme_stylebox_override("hover", _btn_sb(Color(0.25, 0.32, 0.45, 0.7), Color(0.35, 0.45, 0.60, 0.5)))
-	_aim_up.pressed.connect(func(): aim_changed.emit(0.05))
+	_aim_up.pressed.connect(func(): aim_changed.emit(-0.05))
 	c.add_child(_aim_up)
 	_aim_down = Button.new()
 	_aim_down.position = Vector2(2.0, 31.0)
@@ -215,7 +215,7 @@ func _build_aim_buttons() -> void:
 	_aim_down.add_theme_stylebox_override("normal", _btn_sb(Color(0.20, 0.25, 0.35, 0.6), Color(0.30, 0.40, 0.55, 0.4)))
 	_aim_down.add_theme_stylebox_override("pressed", _btn_sb(Color(0.30, 0.40, 0.55, 0.8), Color(0.40, 0.50, 0.65, 0.5)))
 	_aim_down.add_theme_stylebox_override("hover", _btn_sb(Color(0.25, 0.32, 0.45, 0.7), Color(0.35, 0.45, 0.60, 0.5)))
-	_aim_down.pressed.connect(func(): aim_changed.emit(-0.05))
+	_aim_down.pressed.connect(func(): aim_changed.emit(0.05))
 	c.add_child(_aim_down)
 
 
@@ -254,7 +254,7 @@ func _build_menu_overlay() -> void:
 	_menu_overlay.add_child(panel)
 
 	var title := Label.new()
-	title.text = "CARTON WARS"
+	title.text = "CARTOON WARS"
 	title.position = Vector2(0.0, 30.0)
 	title.size = Vector2(480.0, 60.0)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
