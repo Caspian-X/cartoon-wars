@@ -42,8 +42,7 @@ func update_crossbow(dt: float, target: Troop, _ground_y: float, pivot: Vector2)
 	fire_timer -= dt
 	if fire_timer <= 0.0:
 		fire_timer = 1.4 + randf_range(-0.15, 0.15)
-		if is_instance_valid(target):
-			bolt_fired.emit(pivot, crossbow_angle, side)
+		bolt_fired.emit(pivot, crossbow_angle, side)
 
 	if side == "enemy" and is_instance_valid(target):
 		var dx: float = target.position.x - pivot.x

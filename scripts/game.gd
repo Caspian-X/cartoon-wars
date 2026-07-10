@@ -274,9 +274,11 @@ func _process(dt: float) -> void:
 			else:
 				var hit := _nearest_troop_in_range(p.physics_pos, 20.0, p.side)
 				if is_instance_valid(hit):
-					hit.take_damage(p.damage)
-					_spawn_hit_particles(hit, true, p.kind)
-					reached = true
+					var hit_in_range: bool = (hit.frac <= CROSSBOW_RANGE) if p.side == "player" else (hit.frac >= 1.0 - CROSSBOW_RANGE)
+					if hit_in_range:
+						hit.take_damage(p.damage)
+						_spawn_hit_particles(hit, true, p.kind)
+						reached = true
 		if reached:
 			if p.kind != "bolt" and is_instance_valid(p.target) and p.target.alive:
 				p.target.take_damage(p.damage)

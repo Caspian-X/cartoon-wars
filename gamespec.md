@@ -8,7 +8,7 @@
 - **Lane** — The horizontal strip of ground between the two bases where troops walk and fight. Defined by `LANE_MIN` (left) and `LANE_MAX` (right) in pixels; troops use a `frac` (0..1) position along this lane.
 - **Troop** — A unit spawned by either side. Has HP, damage, attack interval, range (fraction of lane), speed (fraction/sec), weapon type, and visual attributes. Walks toward the enemy base; stops to attack enemies in range or the base itself when in range.
 - **Mana** — The resource used to spawn troops. Regenerates over time (1 per 1.8s, max 10). Both player and AI have separate mana pools.
-- **Crossbow** — A turret on top of the player's base that fires bolts at the nearest enemy troop within 75% of the lane. Player aims manually (Up/Down). Enemy base does not have a crossbow.
+- **Crossbow** — A turret on top of the player's base that fires bolts continuously every ~1.4s. Player aims manually (Up/Down). Enemy base does not have a crossbow.
 - **Projectile** — Arrows (bowmen), magic bolts (wizards/imps), or crossbow bolts. Travels from origin to target with an arc; deals damage on arrival if the target still exists.
 - **Particle** — Visual hit/death effect (small colored circles that fly up and fade).
 - **Level** — A playable stage with its own set of available enemy troop types. Levels are selected from a level select screen after the main menu.
@@ -38,7 +38,7 @@
    c. AI decision tick (every 1.2s): randomly spawn an affordable troop.
    d. For each living troop: find nearest enemy ahead; if in range, attack (melee hits instantly, ranged spawns a projectile); otherwise walk forward.
    e. Position troops along the lane; update sprite visuals (walk bob, attack lunge, frame animation, hit flash, HP bar).
-    f. Update player crossbow: find nearest target in range; fire on timer.
+    f. Update player crossbow: fire bolt on timer (always fires, no target check needed for firing).
     g. Advance projectiles; on arrival, damage target if alive; spawn hit particles.
     h. Update particles (gravity, fade).
     i. Remove dead troops.
@@ -66,9 +66,9 @@
 11. R11: Troops have a hit-flash (0.12s white blink) when damaged.
 
 ### Crossbows
-12. R12: Only the player's base has a crossbow. It fires every ~1.4s (±0.15s jitter) when an enemy troop is within 75% of the lane. The bolt fires in the crossbow's current aim direction; it does not home in on the target.
+12. R12: Only the player's base has a crossbow. It fires every ~1.4s (±0.15s jitter) continuously, regardless of enemies. The bolt fires in the crossbow's current aim direction; it does not home in on the target.
 13. R13: Player crossbow angle is controlled manually (Up/Down keys or buttons, ±0.05 rad, clamped to [-0.4, 0.8]). Up aims the crossbow upward and Down aims it downward.
-14. R14: Crossbow bolts travel with gravity (900 px/s²) at a reduced speed (~420 px/s). They deal 7 damage to the first troop they hit within 20 pixels and spawn hit particles; otherwise they disappear when they hit the ground.
+14. R14: Crossbow bolts travel with gravity (900 px/s²) at a reduced speed (~420 px/s). They deal 7 damage to the first troop they hit within 20 pixels and spawn hit particles; otherwise they disappear when they hit the ground. Bolts only damage enemies within the crossbow's targeting range (75% of the lane).
 
 ### Victory/Defeat
 16. R16: The game ends when either base reaches 0 HP. Enemy at 0 = Victory; Player at 0 = Defeat.
