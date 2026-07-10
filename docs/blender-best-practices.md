@@ -42,7 +42,7 @@ Use a standard four-light setup:
 - Adjust energies and positions to suit the model's size and desired mood.
 
 ## World & Render Settings
-- World background: dark blue-gray `(0.05, 0.05, 0.08)` at strength 0.3.
+- World background: medium blue-gray `(0.15, 0.15, 0.2)` at strength 0.8.
 - Use EEVEE as the default render engine for quick viewport feedback.
 - Switch to Rendered view or Material Preview in the viewport to verify lighting and materials.
 
