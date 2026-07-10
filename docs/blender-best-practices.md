@@ -6,7 +6,9 @@
 - Faceted low poly with lots of edges but no smooth edges.
 
 ### Character
-- Hands of humans should be sphere-like, attached to objects they are holding. No arms.
+- Hands of humans should be sphere-like, attached to objects they are holding. Having the hand(s) floating in a normal hand position, if they aren't holding an object or only require one hand to hold the object, is ok too.
+- Should not have arms.
+- No facial features like mouth, nose, eyes, etc.
 
 ### Material
 - Always use node-based materials (Principled BSDF or another shader connected to Material Output) so colors show up in the rendered view. Legacy non-node materials only display in viewport preview and do not render.
