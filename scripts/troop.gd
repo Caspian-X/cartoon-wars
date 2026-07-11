@@ -2,6 +2,8 @@ class_name Troop
 extends Node2D
 
 const FLAMETHROWER_MODEL := preload("res://scenes/units/soldier_flamethrower_model.tscn")
+const SPEARMAN_MODEL := preload("res://scenes/units/spearman_model.tscn")
+const WIZARD_MODEL := preload("res://scenes/units/wizard_model.tscn")
 
 var side: String = "player"
 var type_idx: int = 0
@@ -15,12 +17,16 @@ var phase: float = 0.0
 var state: String = "walk"
 var hit_flash: float = 0.0
 var alive: bool = true
+var dying: bool = false
+var death_timer: float = 0.0
 
 var bg_bar: ColorRect
 var fill_bar: ColorRect
 var character_sprite: Sprite2D
 var character_model: Node3D
 var character_model_position: Vector3
+var character_animation: AnimationPlayer
+var character_animation_name := ""
 var animated_parts: Dictionary = {}
 
 
@@ -37,7 +43,16 @@ func setup(p_side: String, p_type_idx: int, p_data: Dictionary) -> void:
 
 
 func _ready() -> void:
-	if String(data.get("key", "")) == "soldier_flamethrower":
+	var key := String(data.get("key", ""))
+	var model_resource: PackedScene
+	match key:
+		"spearman":
+			model_resource = SPEARMAN_MODEL
+		"wizard":
+			model_resource = WIZARD_MODEL
+		"soldier_flamethrower":
+			model_resource = FLAMETHROWER_MODEL
+	if model_resource:
 		var viewport := SubViewport.new()
 		viewport.size = Vector2i(256, 256)
 		viewport.transparent_bg = true
@@ -58,30 +73,38 @@ func _ready() -> void:
 		key_light.light_energy = 1.6
 		key_light.shadow_enabled = true
 		viewport.add_child(key_light)
-		var model_scene := FLAMETHROWER_MODEL.instantiate()
+		var model_scene := model_resource.instantiate()
 		viewport.add_child(model_scene)
 		var model_camera := model_scene.get_node_or_null("Camera") as Camera3D
 		if model_camera:
 			model_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-			model_camera.size = 4.1
-			model_camera.position = Vector3(6.0, 1.65, 0.0)
-			model_camera.look_at_from_position(model_camera.position, Vector3(0.0, 1.55, 0.0), Vector3.UP)
+			model_camera.position = Vector3(5.0, 2.0, 4.5) if key != "soldier_flamethrower" else Vector3(6.0, 1.65, 0.0)
+			model_camera.look_at_from_position(model_camera.position, Vector3(0.0, 1.45, 0.0), Vector3.UP)
 			model_camera.current = true
-		character_model = model_scene.get_node_or_null("Model/Soldier_Root") as Node3D
+		character_model = model_scene.get_node_or_null("Model") as Node3D
 		character_model_position = character_model.position
-		for part_name in [
-			"UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R",
-			"KneePad_L", "KneePad_R", "Boot_L", "Boot_R", "Torso",
-			"Head", "Flamethrower_Root", "Hand_L", "Hand_R",
-		]:
-			var part := character_model.get_node_or_null(part_name) as Node3D
-			if part:
-				animated_parts[part_name] = {"node": part, "transform": part.transform}
+		character_animation = character_model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if character_animation:
+			for animation_name in ["Idle", "Walk", "Attack"]:
+				var animation: Animation = character_animation.get_animation(animation_name)
+				if animation:
+					animation.loop_mode = Animation.LOOP_LINEAR
+		if key == "soldier_flamethrower":
+			character_model = model_scene.get_node_or_null("Model/Soldier_Root") as Node3D
+			character_model_position = character_model.position
+			for part_name in [
+				"UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R",
+				"KneePad_L", "KneePad_R", "Boot_L", "Boot_R", "Torso",
+				"Head", "Flamethrower_Root", "Hand_L", "Hand_R",
+			]:
+				var part := character_model.get_node_or_null(part_name) as Node3D
+				if part:
+					animated_parts[part_name] = {"node": part, "transform": part.transform}
 		character_sprite = Sprite2D.new()
 		character_sprite.texture = viewport.get_texture()
 		character_sprite.flip_h = side == "player"
 		character_sprite.position = Vector2(0.0, -31.0)
-		character_sprite.scale = Vector2(0.46, 0.46)
+		character_sprite.scale = Vector2(0.46, 0.46) if key == "soldier_flamethrower" else Vector2(0.38, 0.38)
 		add_child(character_sprite)
 	bg_bar = ColorRect.new()
 	add_child(bg_bar)
@@ -100,14 +123,22 @@ func update_visuals(dt: float, _time_sec: float) -> void:
 	phase += dt * 10.0
 	if hit_flash > 0.0:
 		hit_flash -= dt
+	if dying:
+		death_timer -= dt
+		if death_timer <= 0.0:
+			alive = false
+			return
 	if character_sprite:
-		var bob: float = -abs(sin(phase)) * 2.5 if state == "walk" else 0.0
-		var recoil: float = sin(phase * 2.0) * 1.5 if state == "attack" else 0.0
-		var facing: float = 1.0 if side == "player" else -1.0
-		character_sprite.position = Vector2(recoil * facing, -31.0 + bob)
+		character_sprite.position = Vector2(0.0, -31.0)
 		character_sprite.rotation = 0.0
 		character_sprite.modulate = Color.WHITE if hit_flash <= 0.0 else Color(1.0, 0.72, 0.45)
-		if character_model:
+		if character_animation:
+			var next_animation: String = "Death" if dying else "Walk" if state == "walk" else "Attack"
+			if next_animation != character_animation_name:
+				character_animation.play(next_animation, 0.12)
+				character_animation_name = next_animation
+		elif character_model:
+			var bob: float = -abs(sin(phase)) * 2.5 if state == "walk" else 0.0
 			character_model.position = character_model_position + Vector3(0.0, bob * 0.006, 0.0)
 			character_model.rotation = Vector3.ZERO
 			_animate_character_parts()
@@ -115,7 +146,7 @@ func update_visuals(dt: float, _time_sec: float) -> void:
 
 
 func _animate_character_parts() -> void:
-	for part_data in animated_parts.values():
+	for part_data: Dictionary in animated_parts.values():
 		var part: Node3D = part_data["node"]
 		part.transform = part_data["transform"]
 
@@ -198,7 +229,7 @@ func _draw() -> void:
 	var acc_col: Color
 
 	var key: String = String(data.get("key", "spearman"))
-	if key == "soldier_flamethrower":
+	if character_sprite:
 		_draw_hp_bar(s)
 		return
 	match key:
@@ -389,7 +420,11 @@ func _draw_hp_bar(s: float) -> void:
 
 
 func take_damage(amount: float) -> void:
+	if dying:
+		return
 	hp = max(0.0, hp - amount)
 	hit_flash = 0.12
 	if hp <= 0.0:
-		alive = false
+		dying = true
+		death_timer = 1.25
+		state = "death"

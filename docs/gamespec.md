@@ -41,7 +41,7 @@
     f. Update player crossbow: fire bolt on timer (always fires, no target check needed for firing).
     g. Advance projectiles; on arrival, damage target if alive; spawn hit particles.
     h. Update particles (gravity, fade).
-    i. Remove dead troops.
+    i. Play authored death animations, then remove dead troops.
     j. Update HUD (HP bars, mana bar, button enabled states).
     k. Check win/lose → OVER state if a base is at 0 HP.
 5. **End** → Result overlay. Player clicks Play Again (restart) or Main Menu.
@@ -125,7 +125,7 @@ Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone arc
 - **Menu overlay**: Dark dim + styled bordered panel with "CARTOON WARS" title, controls hint, PLAY button, and "Press Enter to select level" hint.
 - **Level select overlay**: Dark dim + styled bordered panel with "SELECT LEVEL" title and level buttons showing name and description.
 - **Result overlay**: Dark dim + styled bordered panel with Victory!/Defeat... title (colored), subtitle, Play Again + Main Menu styled buttons.
-- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, procedural stick-figure troops with weapons (spear/bow/staff/sword), a live 3D Blender flamethrower rendered into the 2D lane, walk/attack animations, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
+- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, live 3D Blender Spearman, Wizard, and Flamethrower models rendered into the 2D lane, authored walk/attack animations, procedural visuals for the remaining troops, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
 - **Controls**: 1-5 = spawn troops, Up/Down = aim crossbow, R = restart level, Enter = open level select from menu.
 
 ## Open Questions / TODOs

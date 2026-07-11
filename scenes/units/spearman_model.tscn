@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/characters/spearman.glb" id="1_model"]
+
+[node name="SpearmanModel" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_model")]
+
+[node name="Camera" type="Camera3D" parent="."]
+projection = 1
+size = 4.2

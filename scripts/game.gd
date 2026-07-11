@@ -27,13 +27,7 @@ const TROOP_TYPES: Array = [
 		"key": "spearman", "name": "Spearman", "cost": 2, "hp": 35.0, "dmg": 6.0,
 		"atk_interval": 0.9, "range": 0.018, "speed": 0.11, "weapon": "melee",
 		"scale": 0.13, "foot_offset": 0.93,
-		"sprite_frames": [
-			"res://assets/sprites/spearman_frame_1.png",
-			"res://assets/sprites/spearman_frame_2.png",
-			"res://assets/sprites/spearman_frame_3.png",
-			"res://assets/sprites/spearman_frame_4.png",
-		],
-		"anim_fps": 8.0,
+		"model_path": "res://assets/models/characters/spearman.glb",
 	},
 	{
 		"key": "bowman", "name": "Bowman", "cost": 4, "hp": 22.0, "dmg": 9.0,
@@ -45,7 +39,7 @@ const TROOP_TYPES: Array = [
 		"key": "wizard", "name": "Wizard", "cost": 6, "hp": 30.0, "dmg": 12.0,
 		"atk_interval": 1.3, "range": 0.155, "speed": 0.085, "weapon": "magic",
 		"scale": 0.13, "foot_offset": 0.93,
-		"sprite_path": "res://assets/sprites/wizard.png",
+		"model_path": "res://assets/models/characters/wizard.glb",
 	},
 	{
 		"key": "broadsword", "name": "Knight", "cost": 8, "hp": 120.0, "dmg": 18.0,
@@ -218,7 +212,7 @@ func _process(dt: float) -> void:
 	_ai_decision(dt)
 
 	for troop in troops:
-		if not is_instance_valid(troop) or not troop.alive:
+		if not is_instance_valid(troop) or not troop.alive or troop.dying:
 			continue
 		var d: Dictionary = troop.data
 		var dir: float = 1.0 if troop.side == "player" else -1.0
@@ -357,7 +351,7 @@ func _damage_flame_area(attacker: Troop, primary: Troop, d: Dictionary) -> void:
 	var radius: float = float(d.get("aoe_range", 0.05))
 	var damage: float = float(d.get("dmg", 5.0))
 	for target in troops:
-		if not is_instance_valid(target) or not target.alive or target.side == attacker.side:
+		if not is_instance_valid(target) or not target.alive or target.dying or target.side == attacker.side:
 			continue
 		if abs(target.frac - primary.frac) <= radius:
 			target.take_damage(damage)
@@ -368,7 +362,7 @@ func _nearest_enemy(troop: Troop) -> Troop:
 	var best: Troop = null
 	var best_dist: float = INF
 	for o in troops:
-		if not is_instance_valid(o) or not o.alive or o.side == troop.side:
+		if not is_instance_valid(o) or not o.alive or o.dying or o.side == troop.side:
 			continue
 		var dist: float = abs(o.frac - troop.frac)
 		var ahead: bool = (troop.side == "player" and o.frac >= troop.frac) or (troop.side == "enemy" and o.frac <= troop.frac)
@@ -382,7 +376,7 @@ func _nearest_troop_in_range(pos: Vector2, radius: float, side: String) -> Troop
 	var best: Troop = null
 	var best_dist: float = radius
 	for o in troops:
-		if not is_instance_valid(o) or not o.alive or o.side == side:
+		if not is_instance_valid(o) or not o.alive or o.dying or o.side == side:
 			continue
 		var dist: float = pos.distance_to(o.position)
 		if dist < best_dist:
@@ -395,7 +389,7 @@ func _nearest_crossbow_target(side: String) -> Troop:
 	var best: Troop = null
 	var best_dist: float = INF
 	for o in troops:
-		if not is_instance_valid(o) or not o.alive or o.side == side:
+		if not is_instance_valid(o) or not o.alive or o.dying or o.side == side:
 			continue
 		if side == "player" and o.frac > CROSSBOW_RANGE:
 			continue

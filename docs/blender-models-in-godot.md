@@ -24,3 +24,16 @@ Use Blender for authored character animation such as idle, walk, attack, and dea
 4. Use the Godot wrapper scene to select, play, and blend imported clips based on gameplay state.
 5. Synchronize attacks, particles, audio, and damage with animation timing through method tracks, signals, or explicit timing data.
 6. Keep only genuinely procedural motion, such as aiming or contextual recoil, in Godot. Do not replace authored character animation with whole-model tilting or ad hoc per-part transforms when proper clips can be authored in Blender.
+
+## Reimporting Updated Models
+
+After re-exporting a `.glb` with changed geometry, materials, rigging, or animations:
+
+1. Stop the running project before reimporting. Godot may otherwise retain the previous imported scene in memory.
+2. Export over the existing game-ready file under `res://assets/models/`, not the source file under `res://blender/`.
+3. Allow the editor filesystem scan to finish. If the change is not detected, run a full filesystem scan.
+4. Force reimport the updated `.glb` from the Godot FileSystem dock. With Godot AI, call `filesystem_manage(op="reimport", paths=["res://assets/models/.../model.glb"])` after playback has stopped.
+5. Restart the game or reopen any scene that already instantiated the model so cached `PackedScene` resources are replaced.
+6. Verify the imported `AnimationPlayer` contains the expected clip names and that the live instance is playing the updated tracks. Checking only the Blender file is not sufficient.
+
+If Godot still shows an older animation, stop playback again, force a full filesystem scan, reimport the `.glb`, and restart the game. Do not work around a stale import by referencing the `.blend` file directly or by bypassing the Godot wrapper scene.
