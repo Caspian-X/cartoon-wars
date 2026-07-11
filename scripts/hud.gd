@@ -19,6 +19,7 @@ var _mana_icon: ColorRect
 var _mana_border: ColorRect
 var _mana_fill: ColorRect
 var _mana_label: Label
+var _bottom_tray: Control
 var _troop_buttons: Array = []
 var _menu_overlay: Control
 var _level_select_overlay: Control
@@ -31,6 +32,15 @@ var _troop_data: Array = []
 
 const VIEW_W := 1280.0
 const VIEW_H := 720.0
+const GROUND_Y := 634.0
+
+const TROOP_TILE_IMAGES := {
+	"spearman": "res://assets/sprites/spearman.png",
+	"bowman": "res://assets/sprites/bowman.png",
+	"wizard": "res://assets/sprites/wizard.png",
+	"broadsword": "res://assets/sprites/broadsword.png",
+	"soldier_flamethrower": "res://assets/sprites/flamer_portrait.svg",
+}
 
 
 func set_troop_data(arr: Array) -> void:
@@ -112,34 +122,34 @@ func _make_label(parent: Control, pos: Vector2, w: float, size: int) -> Label:
 
 
 func _build_bottom_tray() -> void:
-	var tray_y: float = VIEW_H - 72.0
-	var tray_h: float = 64.0
+	var tray_y: float = GROUND_Y + 4.0
+	var tray_h: float = VIEW_H - tray_y - 4.0
 
-	var tray := _styled_panel(Vector2(10.0, tray_y - 4.0), Vector2(VIEW_W - 20.0, tray_h + 8.0), Color(0.06, 0.06, 0.10, 0.75), Color(0.15, 0.15, 0.22, 0.4), 2.0)
-	_root.add_child(tray)
+	_bottom_tray = _styled_panel(Vector2(10.0, tray_y), Vector2(VIEW_W - 20.0, tray_h), Color(0.06, 0.06, 0.10, 0.82), Color(0.15, 0.15, 0.22, 0.55), 2.0)
+	_root.add_child(_bottom_tray)
 
 	_mana_icon = ColorRect.new()
 	_mana_icon.position = Vector2(12.0, 14.0)
 	_mana_icon.size = Vector2(14.0, 14.0)
 	_mana_icon.color = Color(0.50, 0.78, 1.0)
-	tray.add_child(_mana_icon)
+	_bottom_tray.add_child(_mana_icon)
 	var mana_border := ColorRect.new()
 	mana_border.position = Vector2(32.0, 10.0)
 	mana_border.size = Vector2(154.0, 18.0)
 	mana_border.color = Color(0.15, 0.18, 0.25, 0.6)
-	tray.add_child(mana_border)
+	_bottom_tray.add_child(mana_border)
 	_mana_fill = ColorRect.new()
 	_mana_fill.position = Vector2(34.0, 12.0)
 	_mana_fill.size = Vector2(150.0, 14.0)
 	_mana_fill.color = Color(0.40, 0.70, 1.0)
-	tray.add_child(_mana_fill)
-	_mana_label = _make_label(tray, Vector2(32.0, 26.0), 150.0, 10)
+	_bottom_tray.add_child(_mana_fill)
+	_mana_label = _make_label(_bottom_tray, Vector2(32.0, 26.0), 150.0, 10)
 
 	var n: int = _troop_data.size()
-	var bw: float = 80.0
-	var gap: float = 12.0
+	var bw: float = 68.0
+	var gap: float = 8.0
 	var total_w: float = n * bw + (n - 1) * gap
-	var start_x: float = (VIEW_W - total_w) * 0.5
+	var start_x: float = (VIEW_W - 20.0 - total_w) * 0.5
 
 	var btn_colors := [
 		Color(0.25, 0.45, 0.75),
@@ -153,37 +163,53 @@ func _build_bottom_tray() -> void:
 		var d: Dictionary = _troop_data[i]
 		var col: Color = btn_colors[i] if i < btn_colors.size() else Color(0.3, 0.3, 0.4)
 		var btn_container := _styled_panel(
-			Vector2(start_x + i * (bw + gap), 6.0),
-			Vector2(bw, 50.0),
-			Color(col.r * 0.15, col.g * 0.15, col.b * 0.15, 0.85),
-			col * 0.6,
-			1.5
+			Vector2(start_x + i * (bw + gap), 5.0),
+			Vector2(bw, bw),
+			Color(col.r * 0.12, col.g * 0.12, col.b * 0.12, 0.96),
+			col,
+			2.0
 		)
+		btn_container.clip_contents = true
+		_bottom_tray.add_child(btn_container)
+
+		var image := TextureRect.new()
+		image.position = Vector2(4.0, 4.0)
+		image.size = Vector2(bw - 8.0, bw - 8.0)
+		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var image_path: String = String(TROOP_TILE_IMAGES.get(String(d.get("key", "")), ""))
+		if not image_path.is_empty():
+			image.texture = load(image_path)
+		btn_container.add_child(image)
+
+		var shade := ColorRect.new()
+		shade.position = Vector2(2.0, bw - 20.0)
+		shade.size = Vector2(bw - 4.0, 18.0)
+		shade.color = Color(0.02, 0.03, 0.07, 0.82)
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn_container.add_child(shade)
+
+		var key_label := _make_label(btn_container, Vector2(5.0, 3.0), 18.0, 15)
+		key_label.text = str(i + 1)
+		key_label.add_theme_color_override("font_color", Color.WHITE)
+		key_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var cost_label := _make_label(btn_container, Vector2(5.0, bw - 20.0), bw - 10.0, 15)
+		cost_label.text = str(int(d.get("cost", 0)))
+		cost_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		cost_label.add_theme_color_override("font_color", Color(0.35, 0.72, 1.0))
+		cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var btn := Button.new()
 		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-		btn.text = "%s\n%d" % [String(d.get("name", "?")), int(d.get("cost", 0))]
-		btn.add_theme_font_size_override("font_size", 12)
-		btn.add_theme_color_override("font_color", Color(0.9, 0.9, 0.95))
-		btn.add_theme_color_override("font_color_disabled", Color(0.4, 0.4, 0.5))
+		btn.tooltip_text = "%d: %s (%d mana)" % [i + 1, String(d.get("name", "?")), int(d.get("cost", 0))]
 		btn.add_theme_stylebox_override("normal", _empty_sb())
-		btn.add_theme_stylebox_override("pressed", _empty_sb())
-		btn.add_theme_stylebox_override("hover", _empty_sb())
-		btn.add_theme_stylebox_override("disabled", _empty_sb())
+		btn.add_theme_stylebox_override("pressed", _btn_sb(Color(0.25, 0.55, 0.9, 0.28), Color(0.45, 0.8, 1.0, 0.8)))
+		btn.add_theme_stylebox_override("hover", _btn_sb(Color(0.3, 0.65, 1.0, 0.15), Color(0.5, 0.82, 1.0, 0.75)))
+		btn.add_theme_stylebox_override("disabled", _btn_sb(Color(0.02, 0.02, 0.03, 0.62), Color(0.18, 0.18, 0.22, 0.9)))
 		btn.pressed.connect(_on_troop_btn.bind(i))
 		btn_container.add_child(btn)
 		_troop_buttons.append(btn)
-
-		if i < _troop_data.size():
-			var lbl := _make_label(btn_container, Vector2(0.0, 0.0), bw, 11)
-			lbl.text = String(data(i, "name", ""))
-			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			lbl.position.y = 6.0
-
-			var cost_lbl := _make_label(btn_container, Vector2(0.0, 22.0), bw, 11)
-			cost_lbl.text = "💰 %d" % [data(i, "cost", 0)]
-			cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			cost_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 
 func data(idx: int, key: String, default) -> Variant:
@@ -504,7 +530,7 @@ func show_result(won: bool) -> void:
 
 
 func set_gameplay_visible(v: bool) -> void:
-	for n in [_player_bar_container, _enemy_bar_container, _mana_icon, _mana_border, _mana_fill, _mana_label, _aim_up, _aim_down]:
+	for n in [_player_bar_container, _enemy_bar_container, _bottom_tray, _aim_up, _aim_down]:
 		if is_instance_valid(n):
 			n.visible = v
 	for b in _troop_buttons:

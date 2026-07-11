@@ -120,7 +120,7 @@ Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone arc
 
 ## UI / Feedback
 - **Top HUD**: Styled bordered panels with Player HP bar (blue, left) and Enemy HP bar (red, right) with numeric labels and shadowed text.
-- **Bottom tray**: Styled mana diamond + bordered mana bar (left), 5 troop buttons (centered, each bordered with troop-type color accent showing name + cost, disabled when unaffordable).
+- **Bottom tray**: Styled mana diamond + bordered mana bar (left), with 5 square troop deployment tiles centered entirely below the ground line. Each tile shows the troop image, its `1-5` deployment key, and its mana cost in blue; clicking a tile deploys that troop, and unaffordable tiles are disabled.
 - **Aim buttons**: Styled Up/Down buttons in a bordered panel (bottom-left) for player crossbow angle.
 - **Menu overlay**: Dark dim + styled bordered panel with "CARTOON WARS" title, controls hint, PLAY button, and "Press Enter to select level" hint.
 - **Level select overlay**: Dark dim + styled bordered panel with "SELECT LEVEL" title and level buttons showing name and description.
