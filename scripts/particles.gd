@@ -18,12 +18,33 @@ func spawn(x: float, y: float, color: Color, count: int = 6, spread: float = 4.0
 		})
 
 
+func spawn_flame(origin: Vector2, facing: float, count: int = 2) -> void:
+	for i in count:
+		var life := randf_range(0.18, 0.34)
+		particles.append({
+			"x": origin.x,
+			"y": origin.y + randf_range(-2.5, 2.5),
+			"vx": randf_range(105.0, 175.0) * facing,
+			"vy": randf_range(-24.0, 18.0),
+			"life": life,
+			"max_life": life,
+			"color": Color(1.0, randf_range(0.22, 0.72), 0.04),
+			"size": randf_range(2.5, 5.5),
+			"flame": true,
+		})
+
+
 func update_particles(dt: float) -> void:
 	var keep: Array = []
 	for p in particles:
-		p["x"] = float(p["x"]) + float(p["vx"])
-		p["y"] = float(p["y"]) + float(p["vy"])
-		p["vy"] = float(p["vy"]) + 0.12
+		if bool(p.get("flame", false)):
+			p["x"] = float(p["x"]) + float(p["vx"]) * dt
+			p["y"] = float(p["y"]) + float(p["vy"]) * dt
+			p["vy"] = float(p["vy"]) - 18.0 * dt
+		else:
+			p["x"] = float(p["x"]) + float(p["vx"])
+			p["y"] = float(p["y"]) + float(p["vy"])
+			p["vy"] = float(p["vy"]) + 0.12
 		p["life"] = float(p["life"]) - dt
 		if float(p["life"]) > 0.0:
 			keep.append(p)

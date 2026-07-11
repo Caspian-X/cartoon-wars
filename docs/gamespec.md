@@ -49,7 +49,7 @@
 ## Rules
 
 ### Spawning
-1. R1: Player spawns via troop buttons (click) or keys 1-4. Each costs the troop's mana cost.
+1. R1: Player spawns via troop buttons (click) or keys 1-5. Each costs the troop's mana cost.
 2. R2: Cannot spawn if `player_mana < cost`. Button is disabled (greyed) when unaffordable.
 3. R3: Player troops spawn at `frac=0` (left base). Enemy troops spawn at `frac=1` (right base).
 4. R4: AI decides every 1.2s: 72% chance to skip; otherwise picks a random affordable enemy troop from the current level's `ENEMY_TROOP_TYPES` (weighted 3:1 toward cheaper troops cost≤4).
@@ -64,6 +64,7 @@
 9. R9: Ranged weapons (bow→arrow, magic→magic bolt) spawn a projectile that travels to the target's position; damage applies on arrival only if the target is still alive. Both player and enemy ranged units use this system (skeleton→arrow, imp→magic bolt).
 10. R10: If no troop target but the enemy base is in range, the troop attacks the base directly (reduces base HP).
 11. R11: Troops have a hit-flash (0.12s white blink) when damaged.
+11a. R11a: Flamethrowers continuously emit a flame stream while attacking. Each attack damages the primary target and all enemy troops within 0.065 lane distance of it.
 
 ### Crossbows
 12. R12: Only the player's base has a crossbow. It fires every ~1.4s (±0.15s jitter) continuously, regardless of enemies. The bolt fires in the crossbow's current aim direction; it does not home in on the target.
@@ -90,6 +91,7 @@
 | bowman | Bowman | 4 | 22 | 9 | 1.1s | 0.16 | 0.09 | bow | 0.13 |
 | wizard | Wizard | 6 | 30 | 12 | 1.3s | 0.155 | 0.085 | magic | 0.13 |
 | broadsword | Knight | 8 | 120 | 18 | 1.4s | 0.024 | 0.05 | melee | 0.17 |
+| soldier_flamethrower | Flamer | 5 | 48 | 14 AoE | 0.65s | 0.10 | 0.075 | flame | 0.15 |
 
 ### Enemy Troop Types (ENEMY_TROOP_TYPES)
 | Key | Name | Cost | HP | DMG | Atk Interval | Range | Speed | Weapon | Scale |
@@ -118,13 +120,13 @@ Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone arc
 
 ## UI / Feedback
 - **Top HUD**: Styled bordered panels with Player HP bar (blue, left) and Enemy HP bar (red, right) with numeric labels and shadowed text.
-- **Bottom tray**: Styled mana diamond + bordered mana bar (left), 4 troop buttons (centered, each bordered with troop-type color accent showing name + cost, disabled when unaffordable).
+- **Bottom tray**: Styled mana diamond + bordered mana bar (left), 5 troop buttons (centered, each bordered with troop-type color accent showing name + cost, disabled when unaffordable).
 - **Aim buttons**: Styled Up/Down buttons in a bordered panel (bottom-left) for player crossbow angle.
 - **Menu overlay**: Dark dim + styled bordered panel with "CARTOON WARS" title, controls hint, PLAY button, and "Press Enter to select level" hint.
 - **Level select overlay**: Dark dim + styled bordered panel with "SELECT LEVEL" title and level buttons showing name and description.
 - **Result overlay**: Dark dim + styled bordered panel with Victory!/Defeat... title (colored), subtitle, Play Again + Main Menu styled buttons.
-- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, procedural stick-figure troops with weapons (spear/bow/staff/sword) and walk/attack animations, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
-- **Controls**: 1-4 = spawn troops, Up/Down = aim crossbow, R = restart level, Enter = open level select from menu.
+- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, procedural stick-figure troops with weapons (spear/bow/staff/sword), a live 3D Blender flamethrower rendered into the 2D lane, walk/attack animations, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
+- **Controls**: 1-5 = spawn troops, Up/Down = aim crossbow, R = restart level, Enter = open level select from menu.
 
 ## Open Questions / TODOs
 - Sound effects: none yet (could add via AudioStreamPlayer).

@@ -15,4 +15,4 @@ After implementing changes to the game you need to check if you should update th
 
 When using blender, load the [blender-best-practices.md](./docs/blender-best-practices.md) file and follow the best practices.
 
-The `./blender` directory is for blender models that are not imported into the game yet.
+When using models in the game engine, load this file: [blender-models-in-godot.md](./docs/blender-models-in-godot.md).

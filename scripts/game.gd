@@ -53,6 +53,12 @@ const TROOP_TYPES: Array = [
 		"scale": 0.17, "foot_offset": 0.93,
 		"sprite_path": "res://assets/sprites/broadsword.png",
 	},
+	{
+		"key": "soldier_flamethrower", "name": "Flamer", "cost": 5, "hp": 48.0, "dmg": 14.0,
+		"atk_interval": 0.65, "range": 0.10, "speed": 0.075, "weapon": "flame",
+		"aoe_range": 0.065, "scale": 0.15, "foot_offset": 0.93,
+		"model_path": "res://assets/models/characters/soldier_flamethrower.glb",
+	},
 ]
 
 const ENEMY_TROOP_TYPES: Array = [
@@ -227,6 +233,8 @@ func _process(dt: float) -> void:
 
 		if target or target_is_base:
 			troop.state = "attack"
+			if String(d.get("weapon", "melee")) == "flame":
+				_spawn_flame_particles(troop)
 			troop.atk_timer -= dt
 			if troop.atk_timer <= 0.0:
 				troop.atk_timer = float(d.get("atk_interval", 1.0))
@@ -234,6 +242,8 @@ func _process(dt: float) -> void:
 					var weapon: String = String(d.get("weapon", "melee"))
 					if weapon == "bow" or weapon == "magic":
 						_spawn_projectile(troop, target, d)
+					elif weapon == "flame":
+						_damage_flame_area(troop, target, d)
 					else:
 						target.take_damage(float(d.get("dmg", 5.0)))
 						_spawn_hit_particles(target, false)
@@ -336,6 +346,22 @@ func _spawn_hit_particles(troop: Troop, from_projectile: bool, _kind: String = "
 		_particles.spawn(troop.position.x, troop.position.y - 20.0, col, 6, 6.0)
 	else:
 		_particles.spawn(troop.position.x, troop.position.y - 16.0, Color(1.0, 0.84, 0.31), 4, 8.0)
+
+
+func _spawn_flame_particles(troop: Troop) -> void:
+	var facing := 1.0 if troop.side == "player" else -1.0
+	_particles.spawn_flame(troop.position + Vector2(24.0 * facing, -25.0), facing, 2)
+
+
+func _damage_flame_area(attacker: Troop, primary: Troop, d: Dictionary) -> void:
+	var radius: float = float(d.get("aoe_range", 0.05))
+	var damage: float = float(d.get("dmg", 5.0))
+	for target in troops:
+		if not is_instance_valid(target) or not target.alive or target.side == attacker.side:
+			continue
+		if abs(target.frac - primary.frac) <= radius:
+			target.take_damage(damage)
+			_spawn_hit_particles(target, true, "flame")
 
 
 func _nearest_enemy(troop: Troop) -> Troop:
@@ -464,6 +490,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_2: try_spawn(1)
 			KEY_3: try_spawn(2)
 			KEY_4: try_spawn(3)
+			KEY_5: try_spawn(4)
 			KEY_UP: _on_aim_changed(-0.05)
 			KEY_DOWN: _on_aim_changed(0.05)
 			KEY_R: start_game()

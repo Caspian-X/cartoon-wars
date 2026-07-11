@@ -146,6 +146,7 @@ func _build_bottom_tray() -> void:
 		Color(0.20, 0.60, 0.30),
 		Color(0.45, 0.25, 0.65),
 		Color(0.65, 0.18, 0.18),
+		Color(0.90, 0.38, 0.08),
 	]
 
 	for i in n:
@@ -285,7 +286,7 @@ func _build_menu_overlay() -> void:
 	panel.add_child(sub)
 
 	var controls := Label.new()
-	controls.text = "1-4 = Spawn troops   |   Up/Down = Aim crossbow   |   R = Restart"
+	controls.text = "1-5 = Spawn troops   |   Up/Down = Aim crossbow   |   R = Restart"
 	controls.position = Vector2(0.0, 145.0)
 	controls.size = Vector2(480.0, 24.0)
 	controls.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

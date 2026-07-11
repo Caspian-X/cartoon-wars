@@ -1,6 +1,8 @@
 class_name Troop
 extends Node2D
 
+const FLAMETHROWER_MODEL := preload("res://scenes/units/soldier_flamethrower_model.tscn")
+
 var side: String = "player"
 var type_idx: int = 0
 var data: Dictionary = {}
@@ -16,6 +18,10 @@ var alive: bool = true
 
 var bg_bar: ColorRect
 var fill_bar: ColorRect
+var character_sprite: Sprite2D
+var character_model: Node3D
+var character_model_position: Vector3
+var animated_parts: Dictionary = {}
 
 
 func setup(p_side: String, p_type_idx: int, p_data: Dictionary) -> void:
@@ -31,6 +37,52 @@ func setup(p_side: String, p_type_idx: int, p_data: Dictionary) -> void:
 
 
 func _ready() -> void:
+	if String(data.get("key", "")) == "soldier_flamethrower":
+		var viewport := SubViewport.new()
+		viewport.size = Vector2i(256, 256)
+		viewport.transparent_bg = true
+		viewport.own_world_3d = true
+		viewport.world_3d = World3D.new()
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child(viewport)
+		var environment := Environment.new()
+		environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		environment.ambient_light_color = Color(0.72, 0.78, 0.9)
+		environment.ambient_light_energy = 1.1
+		var world_environment := WorldEnvironment.new()
+		world_environment.environment = environment
+		viewport.add_child(world_environment)
+		var key_light := DirectionalLight3D.new()
+		key_light.rotation_degrees = Vector3(-42.0, -28.0, 0.0)
+		key_light.light_color = Color(1.0, 0.91, 0.78)
+		key_light.light_energy = 1.6
+		key_light.shadow_enabled = true
+		viewport.add_child(key_light)
+		var model_scene := FLAMETHROWER_MODEL.instantiate()
+		viewport.add_child(model_scene)
+		var model_camera := model_scene.get_node_or_null("Camera") as Camera3D
+		if model_camera:
+			model_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+			model_camera.size = 4.1
+			model_camera.position = Vector3(6.0, 1.65, 0.0)
+			model_camera.look_at_from_position(model_camera.position, Vector3(0.0, 1.55, 0.0), Vector3.UP)
+			model_camera.current = true
+		character_model = model_scene.get_node_or_null("Model/Soldier_Root") as Node3D
+		character_model_position = character_model.position
+		for part_name in [
+			"UpperLeg_L", "UpperLeg_R", "LowerLeg_L", "LowerLeg_R",
+			"KneePad_L", "KneePad_R", "Boot_L", "Boot_R", "Torso",
+			"Head", "Flamethrower_Root", "Hand_L", "Hand_R",
+		]:
+			var part := character_model.get_node_or_null(part_name) as Node3D
+			if part:
+				animated_parts[part_name] = {"node": part, "transform": part.transform}
+		character_sprite = Sprite2D.new()
+		character_sprite.texture = viewport.get_texture()
+		character_sprite.flip_h = side == "player"
+		character_sprite.position = Vector2(0.0, -31.0)
+		character_sprite.scale = Vector2(0.46, 0.46)
+		add_child(character_sprite)
 	bg_bar = ColorRect.new()
 	add_child(bg_bar)
 	fill_bar = ColorRect.new()
@@ -48,7 +100,79 @@ func update_visuals(dt: float, _time_sec: float) -> void:
 	phase += dt * 10.0
 	if hit_flash > 0.0:
 		hit_flash -= dt
+	if character_sprite:
+		var bob: float = -abs(sin(phase)) * 2.5 if state == "walk" else 0.0
+		var recoil: float = sin(phase * 2.0) * 1.5 if state == "attack" else 0.0
+		var facing: float = 1.0 if side == "player" else -1.0
+		character_sprite.position = Vector2(recoil * facing, -31.0 + bob)
+		character_sprite.rotation = 0.0
+		character_sprite.modulate = Color.WHITE if hit_flash <= 0.0 else Color(1.0, 0.72, 0.45)
+		if character_model:
+			character_model.position = character_model_position + Vector3(0.0, bob * 0.006, 0.0)
+			character_model.rotation = Vector3.ZERO
+			_animate_character_parts()
 	queue_redraw()
+
+
+func _animate_character_parts() -> void:
+	for part_data in animated_parts.values():
+		var part: Node3D = part_data["node"]
+		part.transform = part_data["transform"]
+
+	var upper_l: Node3D = animated_parts["UpperLeg_L"]["node"]
+	var upper_r: Node3D = animated_parts["UpperLeg_R"]["node"]
+	var lower_l: Node3D = animated_parts["LowerLeg_L"]["node"]
+	var lower_r: Node3D = animated_parts["LowerLeg_R"]["node"]
+	var knee_l: Node3D = animated_parts["KneePad_L"]["node"]
+	var knee_r: Node3D = animated_parts["KneePad_R"]["node"]
+	var boot_l: Node3D = animated_parts["Boot_L"]["node"]
+	var boot_r: Node3D = animated_parts["Boot_R"]["node"]
+	var torso: Node3D = animated_parts["Torso"]["node"]
+	var head: Node3D = animated_parts["Head"]["node"]
+	var weapon: Node3D = animated_parts["Flamethrower_Root"]["node"]
+	var hand_l: Node3D = animated_parts["Hand_L"]["node"]
+	var hand_r: Node3D = animated_parts["Hand_R"]["node"]
+
+	if state == "walk":
+		var left_stride: float = sin(phase)
+		var right_stride: float = -left_stride
+		var left_lift: float = max(0.0, left_stride)
+		var right_lift: float = max(0.0, right_stride)
+
+		upper_l.rotation.x += left_stride * 0.42
+		upper_r.rotation.x += right_stride * 0.42
+		lower_l.rotation.x += left_stride * 0.18 + left_lift * 0.34
+		lower_r.rotation.x += right_stride * 0.18 + right_lift * 0.34
+
+		lower_l.position += Vector3(0.0, left_lift * 0.06, left_stride * 0.10)
+		lower_r.position += Vector3(0.0, right_lift * 0.06, right_stride * 0.10)
+		knee_l.position += Vector3(0.0, left_lift * 0.05, left_stride * 0.08)
+		knee_r.position += Vector3(0.0, right_lift * 0.05, right_stride * 0.08)
+		boot_l.position += Vector3(0.0, left_lift * 0.13, left_stride * 0.18)
+		boot_r.position += Vector3(0.0, right_lift * 0.13, right_stride * 0.18)
+		boot_l.rotation.x += left_stride * 0.20
+		boot_r.rotation.x += right_stride * 0.20
+
+		var counter_sway: float = sin(phase) * 0.035
+		torso.rotation.z += counter_sway
+		head.rotation.z -= counter_sway * 0.55
+		weapon.rotation.z += counter_sway * 0.65
+		hand_l.rotation.z += counter_sway * 0.65
+		hand_r.rotation.z += counter_sway * 0.65
+	else:
+		var recoil: float = (sin(phase * 2.0) + 1.0) * 0.5
+		var recoil_offset := Vector3(0.0, recoil * 0.018, recoil * 0.075)
+		weapon.position += recoil_offset
+		hand_l.position += recoil_offset
+		hand_r.position += recoil_offset
+		weapon.rotation.x -= recoil * 0.045
+		hand_l.rotation.x -= recoil * 0.045
+		hand_r.rotation.x -= recoil * 0.045
+		torso.rotation.x += recoil * 0.025
+		upper_l.rotation.z -= 0.06
+		upper_r.rotation.z += 0.06
+		boot_l.position.x -= 0.04
+		boot_r.position.x += 0.04
 
 
 func _draw() -> void:
@@ -74,6 +198,9 @@ func _draw() -> void:
 	var acc_col: Color
 
 	var key: String = String(data.get("key", "spearman"))
+	if key == "soldier_flamethrower":
+		_draw_hp_bar(s)
+		return
 	match key:
 		"spearman":
 			body_col = Color(0.25, 0.45, 0.75)
