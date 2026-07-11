@@ -45,7 +45,7 @@ const TROOP_TYPES: Array = [
 		"key": "broadsword", "name": "Knight", "cost": 8, "hp": 120.0, "dmg": 18.0,
 		"atk_interval": 1.4, "range": 0.024, "speed": 0.05, "weapon": "melee",
 		"scale": 0.17, "foot_offset": 0.93,
-		"sprite_path": "res://assets/sprites/broadsword.png",
+		"sprite_path": "res://assets/sprites/broadsword_2d/walk_00.png",
 	},
 	{
 		"key": "soldier_flamethrower", "name": "Flamer", "cost": 5, "hp": 48.0, "dmg": 14.0,

@@ -23,6 +23,7 @@ var death_timer: float = 0.0
 var bg_bar: ColorRect
 var fill_bar: ColorRect
 var character_sprite: Sprite2D
+var character_2d_sprite: AnimatedSprite2D
 var character_model: Node3D
 var character_model_position: Vector3
 var character_animation: AnimationPlayer
@@ -52,7 +53,9 @@ func _ready() -> void:
 			model_resource = WIZARD_MODEL
 		"soldier_flamethrower":
 			model_resource = FLAMETHROWER_MODEL
-	if model_resource:
+	if key == "broadsword":
+		_setup_broadsword_2d()
+	elif model_resource:
 		var viewport := SubViewport.new()
 		viewport.size = Vector2i(256, 256)
 		viewport.transparent_bg = true
@@ -117,6 +120,32 @@ func _ready() -> void:
 	fill_bar.color = Color(0.3, 0.9, 0.2)
 
 
+func _setup_broadsword_2d() -> void:
+	var frames := SpriteFrames.new()
+	frames.remove_animation("default")
+	var clip_frames: Dictionary[String, int] = {
+		"Walk": 6,
+		"Attack": 7,
+		"Death": 8,
+	}
+	for animation_name: String in clip_frames:
+		frames.add_animation(animation_name)
+		frames.set_animation_speed(animation_name, 7.0)
+		frames.set_animation_loop(animation_name, animation_name != "Death")
+		var file_prefix: String = animation_name.to_lower()
+		for frame_idx: int in range(clip_frames[animation_name]):
+			var texture_path: String = "res://assets/sprites/broadsword_2d/%s_%02d.png" % [file_prefix, frame_idx]
+			frames.add_frame(animation_name, load(texture_path) as Texture2D)
+	character_2d_sprite = AnimatedSprite2D.new()
+	character_2d_sprite.sprite_frames = frames
+	character_2d_sprite.animation = "Walk"
+	character_2d_sprite.flip_h = side == "player"
+	character_2d_sprite.position = Vector2(0.0, -47.0)
+	character_2d_sprite.scale = Vector2(0.43, 0.43)
+	add_child(character_2d_sprite)
+	character_2d_sprite.play()
+
+
 func update_visuals(dt: float, _time_sec: float) -> void:
 	if not alive:
 		return
@@ -128,6 +157,12 @@ func update_visuals(dt: float, _time_sec: float) -> void:
 		if death_timer <= 0.0:
 			alive = false
 			return
+	if character_2d_sprite:
+		character_2d_sprite.position = Vector2(0.0, -47.0)
+		character_2d_sprite.modulate = Color.WHITE if hit_flash <= 0.0 else Color(1.0, 0.72, 0.45)
+		var next_animation: String = "Death" if dying else "Walk" if state == "walk" else "Attack"
+		if next_animation != character_2d_sprite.animation:
+			character_2d_sprite.play(next_animation)
 	if character_sprite:
 		character_sprite.position = Vector2(0.0, -31.0)
 		character_sprite.rotation = 0.0
@@ -229,7 +264,7 @@ func _draw() -> void:
 	var acc_col: Color
 
 	var key: String = String(data.get("key", "spearman"))
-	if character_sprite:
+	if character_sprite or character_2d_sprite:
 		_draw_hp_bar(s)
 		return
 	match key:
