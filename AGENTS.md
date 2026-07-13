@@ -11,6 +11,10 @@ Always reference the gamespec before making changes to the game to see know how 
 
 After implementing changes to the game you need to check if you should update the gamespec to stay up to date. Report back to the user with a small bulleted list what changes were made. Also tell the user if no changes were made.
 
+Important gamespec requirements must have automated acceptance tests. When a requirement changes, update both the gamespec and its tests in the same change. Before finishing game work, run the relevant tests and verify that unchanged requirements still pass; add missing coverage when a regression reveals an untested requirement.
+
+Organize gamespec tests by applicable `##` headings (for example `test_game_states.gd`, `test_rules.gd`, and `test_ui_feedback.gd`). Use focused tests for important behaviors within each heading; descriptive headings such as the glossary and open questions do not need tests. Prefer a few meaningful acceptance tests over one test per sentence.
+
 ## Blender
 
 When using blender, load the [blender-best-practices.md](./docs/blender-best-practices.md) file and follow the best practices.
