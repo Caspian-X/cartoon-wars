@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"broadsword"
+display_name = "Knight"
+cost = 8
+max_hp = 120.0
+damage = 18.0
+attack_interval = 1.4
+attack_range = 0.024
+speed = 0.05
+weapon = "melee"
+visual_scale = 0.17
+foot_offset = 0.93
+sprite_path = "res://assets/sprites/broadsword_2d/walk_00.png"
+presentation = "authored_frames"

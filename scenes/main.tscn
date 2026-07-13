@@ -1,6 +1,35 @@
-[gd_scene format=3 uid="uid://mvqlluvd08oy"]
+[gd_scene load_steps=8 format=3 uid="uid://mvqlluvd08oy"]
 
-[ext_resource type="Script" uid="uid://b28kdgg8tbquv" path="res://scripts/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://features/game/game.gd" id="1_game"]
+[ext_resource type="Script" path="res://features/battlefield/base.gd" id="2_base"]
+[ext_resource type="Script" path="res://features/combat/particles.gd" id="3_particles"]
+[ext_resource type="PackedScene" path="res://features/ui/hud.tscn" id="4_hud"]
+[ext_resource type="Script" path="res://features/battlefield/battlefield.gd" id="5_battlefield"]
+[ext_resource type="Script" path="res://features/combat/combat_system.gd" id="6_combat"]
 
 [node name="Game" type="Node2D" unique_id=298880979]
 script = ExtResource("1_game")
+
+[node name="Battlefield" type="Node2D" parent="."]
+show_behind_parent = true
+script = ExtResource("5_battlefield")
+
+[node name="PlayerBase" type="Node2D" parent="."]
+position = Vector2(89.6, 634)
+script = ExtResource("2_base")
+
+[node name="EnemyBase" type="Node2D" parent="."]
+position = Vector2(1190.4, 634)
+script = ExtResource("2_base")
+
+[node name="Troops" type="Node2D" parent="."]
+
+[node name="Projectiles" type="Node2D" parent="."]
+
+[node name="Particles" type="Node2D" parent="."]
+script = ExtResource("3_particles")
+
+[node name="CombatSystem" type="Node" parent="."]
+script = ExtResource("6_combat")
+
+[node name="HUD" parent="." instance=ExtResource("4_hud")]

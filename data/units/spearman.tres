@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/units/spearman_model.tscn" id="2"]
+[resource]
+script = ExtResource("1")
+id = &"spearman"
+display_name = "Spearman"
+cost = 2
+max_hp = 35.0
+damage = 6.0
+attack_interval = 0.9
+attack_range = 0.018
+speed = 0.11
+weapon = "melee"
+visual_scale = 0.13
+foot_offset = 0.93
+model_path = "res://assets/models/characters/spearman.glb"
+presentation = "model_viewport"
+presentation_scene = ExtResource("2")

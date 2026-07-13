@@ -1,3 +1,10 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+*.import
+
+# Machine-local and generated editor files
+.DS_Store
+**/.DS_Store
+*.blend1
+*.blend2

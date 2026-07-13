@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/units/wizard_model.tscn" id="2"]
+[resource]
+script = ExtResource("1")
+id = &"wizard"
+display_name = "Wizard"
+cost = 6
+max_hp = 30.0
+damage = 12.0
+attack_interval = 1.3
+attack_range = 0.155
+speed = 0.085
+weapon = "magic"
+visual_scale = 0.13
+foot_offset = 0.93
+model_path = "res://assets/models/characters/wizard.glb"
+presentation = "model_viewport"
+presentation_scene = ExtResource("2")

@@ -29,7 +29,7 @@
 - PLAYING → MENU: (via restart) R key restarts the current level.
 
 ## Game Flow
-1. **Launch** → MENU state. Scene `res://scenes/main.tscn` loads; `Game._ready()` builds bases, layers, HUD, and shows the menu overlay.
+1. **Launch** → MENU state. Scene `res://scenes/main.tscn` loads its explicit battlefield, simulation-layer, and HUD children; `Game._ready()` wires their signals and shows the menu overlay.
 2. **Level Select** → Enter or Play button → LEVEL_SELECT state. Shows level selection overlay with available levels.
 3. **Start** → Select a level → `start_level(id)` sets current level's enemy troop types → `start_game()` resets HP/mana/troops, sets state to PLAYING, hides overlays, shows HUD.
 4. **Each frame (`_process`)**:
@@ -52,7 +52,7 @@
 1. R1: Player spawns via troop buttons (click) or keys 1-5. Each costs the troop's mana cost.
 2. R2: Cannot spawn if `player_mana < cost`. Button is disabled (greyed) when unaffordable.
 3. R3: Player troops spawn at `frac=0` (left base). Enemy troops spawn at `frac=1` (right base).
-4. R4: AI decides every 1.2s: 72% chance to skip; otherwise picks a random affordable enemy troop from the current level's `ENEMY_TROOP_TYPES` (weighted 3:1 toward cheaper troops cost≤4).
+4. R4: AI decides every 1.2s: 72% chance to skip; otherwise picks a random affordable enemy troop from the current `LevelDefinition` roster (weighted 3:1 toward cheaper troops cost≤4).
 
 ### Movement
 5. R5: Troops walk toward the enemy base at `speed` (fraction of lane per second). Player moves right (+), enemy moves left (-).
@@ -80,11 +80,10 @@
 - `state`: menu | level_select | playing | over
 - `player_hp`, `enemy_hp`: float (max 180)
 - `player_mana`, `ai_mana`: float (max 10, regen 1/1.8s)
-- `troops`: Array[Troop]
-- `projectiles`: Array[Projectile]
+- Active troops and projectiles are owned and updated by `CombatSystem`.
 - `ai_timer`: float
 
-### Player Troop Types (TROOP_TYPES)
+### Player Unit Definitions
 | Key | Name | Cost | HP | DMG | Atk Interval | Range | Speed | Weapon | Scale |
 |---|---|---|---|---|---|---|---|---|---|---|
 | spearman | Spearman | 2 | 35 | 6 | 0.9s | 0.018 | 0.11 | melee | 0.13 |
@@ -93,7 +92,7 @@
 | broadsword | Knight | 8 | 120 | 18 | 1.4s | 0.024 | 0.05 | melee | 0.17 |
 | soldier_flamethrower | Flamer | 5 | 48 | 14 AoE | 0.65s | 0.10 | 0.075 | flame | 0.15 |
 
-### Enemy Troop Types (ENEMY_TROOP_TYPES)
+### Enemy Unit Definitions
 | Key | Name | Cost | HP | DMG | Atk Interval | Range | Speed | Weapon | Scale |
 |---|---|---|---|---|---|---|---|---|---|---|
 | golem | Golem | 4 | 80 | 10 | 1.2s | 0.022 | 0.06 | melee | 0.17 |
@@ -102,13 +101,13 @@
 
 Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone archer), Imp (demon fire mage). The AI picks from the current level's available enemy types.
 
-### Levels (LEVELS)
+### Level Definitions
 | ID | Name | Description | Enemy Types |
 |---|---|---|---|
 | 1 | The Beginning | Repel the enemy's monstrous forces! | Golem, Skeleton, Imp (all 3) |
 
 ### Troop
-- `side`, `type_idx`, `data` (Dictionary ref to TROOP_TYPES or ENEMY_TROOP_TYPES entry)
+- `side`, `definition` (`UnitDefinition` Resource)
 - `hp`, `max_hp`, `frac` (0..1 lane position), `y_jitter`
 - `atk_timer`, `phase` (walk cycle), `state` (walk | attack), `hit_flash`, `alive`
 
@@ -127,6 +126,11 @@ Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone arc
 - **Result overlay**: Dark dim + styled bordered panel with Victory!/Defeat... title (colored), subtitle, Play Again + Main Menu styled buttons.
 - **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, live 3D Blender Spearman, Wizard, and Flamethrower models rendered into the 2D lane, a Grease Pencil Blender Knight rendered as authored 2D walk/attack/death sprite frames, procedural visuals for the remaining troops, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
 - **Controls**: 1-5 = spawn troops, Up/Down = aim crossbow, R = restart level, Enter = open level select from menu.
+
+## Architecture
+- Feature code lives under `res://features/`; authored gameplay data lives in typed `UnitDefinition` and `LevelDefinition` resources under `res://data/`.
+- `res://scenes/main.tscn` explicitly composes the background `Battlefield`, bases, troop/projectile layers, particles, `CombatSystem`, and the instanced HUD scene. `Game` coordinates state, resources, AI timing, base HP results, and HUD; `CombatSystem` owns movement, targeting, attacks, projectiles, particles, and combat cleanup.
+- Unit presentation mode and optional presentation scene are selected by `UnitDefinition`; procedural rendering remains the fallback.
 
 ## Open Questions / TODOs
 - Sound effects: none yet (could add via AudioStreamPlayer).

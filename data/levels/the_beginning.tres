@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="LevelDefinition" load_steps=6 format=3]
+[ext_resource type="Script" path="res://features/data/level_definition.gd" id="1"]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="unit_script"]
+[ext_resource type="Resource" path="res://data/units/golem.tres" id="2"]
+[ext_resource type="Resource" path="res://data/units/skeleton.tres" id="3"]
+[ext_resource type="Resource" path="res://data/units/imp.tres" id="4"]
+[resource]
+script = ExtResource("1")
+id = 1
+display_name = "The Beginning"
+description = "Repel the enemy's monstrous forces!"
+enemy_units = Array[ExtResource("unit_script")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])

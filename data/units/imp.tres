@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"imp"
+display_name = "Imp"
+cost = 5
+max_hp = 20.0
+damage = 10.0
+attack_interval = 1.0
+attack_range = 0.14
+speed = 0.12
+weapon = "magic"
+visual_scale = 0.10
+foot_offset = 0.93

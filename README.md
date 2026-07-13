@@ -2,5 +2,10 @@
 
 ## Project Setup
 
-1. **AI setup** - Download the [godot ai](https://store.godotengine.org/asset/dlight/godot-ai/) addon and import it into godot. Go to project settings and enable it. In the project (this directory), add the [opencode.json](./opencode.json) file with the mcp section.
-2. **Blender MCP** - See [docs/blender-mcp-setup.md](./docs/blender-mcp-setup.md) for connecting opencode to Blender.
+1. **Godot** - Open the project with Godot 4.7. The project uses the Jolt Physics engine.
+2. **Godot AI** - The [Godot AI](https://store.godotengine.org/asset/dlight/godot-ai/) addon is vendored under `addons/godot_ai/` and already enabled. OpenCode MCP configuration is in [opencode.jsonc](./opencode.jsonc).
+3. **Blender MCP** - See [docs/blender-mcp-setup.md](./docs/blender-mcp-setup.md) for connecting OpenCode to Blender.
+
+## Third-Party Software
+
+- Godot AI is vendored in `addons/godot_ai/`. See its included license and plugin metadata for version and licensing details. Update the vendored directory as a single unit rather than retaining installer archives in the repository.

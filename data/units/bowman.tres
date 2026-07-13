@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+[ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = &"bowman"
+display_name = "Bowman"
+cost = 4
+max_hp = 22.0
+damage = 9.0
+attack_interval = 1.1
+attack_range = 0.16
+speed = 0.09
+weapon = "bow"
+visual_scale = 0.13
+foot_offset = 0.93
+sprite_path = "res://assets/sprites/bowman.png"

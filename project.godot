@@ -31,6 +31,18 @@ window/size/viewport=Vector2i(1280, 720)
 
 enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
+[input]
+
+unit_1={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":49)]}
+unit_2={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":50)]}
+unit_3={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":51)]}
+unit_4={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":52)]}
+unit_5={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":53)]}
+aim_up={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":4194320)]}
+aim_down={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":4194322)]}
+restart_level={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":82)]}
+ui_accept={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":4194309)]}
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
