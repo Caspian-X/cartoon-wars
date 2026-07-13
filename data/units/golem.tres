@@ -1,5 +1,6 @@
-[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=3 format=3]
 [ext_resource type="Script" path="res://features/data/unit_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/units/golem_model.tscn" id="2_model"]
 [resource]
 script = ExtResource("1")
 id = &"golem"
@@ -13,3 +14,5 @@ speed = 0.06
 weapon = "melee"
 visual_scale = 0.17
 foot_offset = 0.93
+presentation = "model_viewport"
+presentation_scene = ExtResource("2_model")

@@ -45,6 +45,11 @@ const TROOP_TILE_IMAGES := {
 
 func set_troop_data(arr: Array[UnitDefinition]) -> void:
 	_troop_data = arr
+	if _root and _bottom_tray:
+		_root.remove_child(_bottom_tray)
+		_bottom_tray.queue_free()
+		_troop_buttons.clear()
+		_build_bottom_tray()
 
 
 func _ready() -> void:

@@ -124,18 +124,17 @@ Enemy units are monster/robot-like: Golem (stone melee tank), Skeleton (bone arc
 - **Menu overlay**: Dark dim + styled bordered panel with "CARTOON WARS" title, controls hint, PLAY button, and "Press Enter to select level" hint.
 - **Level select overlay**: Dark dim + styled bordered panel with "SELECT LEVEL" title and level buttons showing name and description.
 - **Result overlay**: Dark dim + styled bordered panel with Victory!/Defeat... title (colored), subtitle, Play Again + Main Menu styled buttons.
-- **In-game visuals**: Bright sky gradient with mountains and hills, sun with glow halo, puffy white clouds, grass tufts with rocks and flowers, a dirt path along the lane, two stone towers with brick patterns, glowing windows, animated waving flags, detailed battlements and crossbows, ground shadows, live 3D Blender Spearman, Wizard, and Flamethrower models rendered into the 2D lane, a Grease Pencil Blender Knight rendered as authored 2D walk/attack/death sprite frames, procedural visuals for the remaining troops, animated HP bars (green→red by ratio), arrows/bolts/magic projectiles with trails and arcs, colored hit particles.
+- **In-game visuals**: A faceted Blender battlefield with sky, mountains, hills, clouds, sun, grass, and lane; two Blender stone towers with glowing windows, animated flags, battlements, and a player crossbow; and live Blender models for every troop rendered into the 2D lane. Troops use authored Idle, Walk, Attack, and Death clips. Godot retains runtime HP bars, crossbow aiming, arrows/bolts/magic projectiles, flame effects, trails, and hit particles.
 - **Controls**: 1-5 = spawn troops, Up/Down = aim crossbow, R = restart level, Enter = open level select from menu.
 
 ## Architecture
 - Feature code lives under `res://features/`; authored gameplay data lives in typed `UnitDefinition` and `LevelDefinition` resources under `res://data/`.
 - `res://scenes/main.tscn` explicitly composes the background `Battlefield`, bases, troop/projectile layers, particles, `CombatSystem`, and the instanced HUD scene. `Game` coordinates state, resources, AI timing, base HP results, and HUD; `CombatSystem` owns movement, targeting, attacks, projectiles, particles, and combat cleanup.
-- Unit presentation mode and optional presentation scene are selected by `UnitDefinition`; procedural rendering remains the fallback.
+- Unit presentation mode and wrapper scene are selected by `UnitDefinition`; every current troop uses a Blender model viewport, while procedural rendering remains an unsupported-content fallback.
 
 ## Open Questions / TODOs
 - Sound effects: none yet (could add via AudioStreamPlayer).
 - Balance: current values may need tuning after extended playtesting.
 - Mobile/touch controls: only keyboard + mouse buttons currently.
-- Procedural troop animations: walk cycle and attack lunge use simple sine waves; could add frame-by-frame limb positioning for more natural motion.
 - Level progression: future levels should unlock new player units and introduce new enemy types.
 - Unit upgrades: between levels, players could spend currency to upgrade existing units.
