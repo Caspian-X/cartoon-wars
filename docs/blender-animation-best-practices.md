@@ -14,6 +14,7 @@
 ## Actions And Naming
 
 - Store each exported clip as a separate Blender action with a concise stable name such as `Idle`, `Walk`, `Attack`, `Hit`, or `Death`.
+- In Blender versions with Action Slots, every action for the same armature must use a compatible slot with the same target ID type and identifier. Name the actions after clips, but keep their slots associated with the armature object; giving each slot the clip name can make only one action evaluate when switching clips.
 - Use names consistently across related characters when clips have the same gameplay meaning.
 - Give every action an intentional frame range. Remove accidental keys outside that range.
 - Keep only actions intended for the asset. Delete obsolete duplicates and test actions before export.
@@ -116,6 +117,7 @@
 ## Validation Checklist
 
 - Every required gameplay animation has one clearly named action.
+- Selecting each action automatically resolves a compatible Action Slot on the intended armature and evaluates its keyed pose.
 - Actions use intentional frame ranges with no stray keys.
 - Important poses and silhouettes read from the gameplay camera.
 - Timing clearly communicates anticipation, impact, recovery, and state changes.

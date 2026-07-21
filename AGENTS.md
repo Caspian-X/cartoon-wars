@@ -19,6 +19,10 @@ Organize gamespec tests by applicable `##` headings (for example `test_game_stat
 
 If you need to use blender and the blender MCP is not started you can start it with the `just mcp` command.
 
+When you are working in blender and find something that contradicts the blender guide files, please update them.
+
+### Guides
+
 When using blender, load the [blender-best-practices.md](./docs/blender-best-practices.md) file and follow the best practices.
 
 When rigging a model in Blender, also load [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md) and follow its bone, skinning, control, and validation guidance.
