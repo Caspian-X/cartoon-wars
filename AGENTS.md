@@ -22,7 +22,7 @@ When project work reveals that a guide is incorrect or incomplete, update it onl
 
 ### Guides
 
-For any Blender work, read [blender-best-practices.md](./docs/blender-best-practices.md).
+For any Blender work, read [blender-project-preferences.md](./docs/blender-project-preferences.md) and [blender-best-practices.md](./docs/blender-best-practices.md).
 
 When changing armatures, bones, constraints, or skinning, also read [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md).
 

@@ -2,6 +2,8 @@
 
 > **Default rule:** Keep rigs as simple as the model and its required animations allow. Every bone, constraint, and control should have a clear purpose.
 
+Follow [Blender Project Preferences](./blender-project-preferences.md) for character anatomy, detached parts, and naming requirements.
+
 ## Before Rigging
 
 1. List the poses and animations the model must support before designing the skeleton.
@@ -17,7 +19,7 @@
 - Put the root bone at the character origin, normally centered on the ground beneath the character. It should provide a stable parent for the entire rig.
 - Put torso or body bones along the model's centerline. Place head, hand, boot, weapon, and accessory bones at their actual rotation pivots.
 - For rigid separate parts, place the controlling bone so rotating it produces the intended hinge or swing without requiring translation correction.
-- Floating body parts are valid in this project's style. Their bones may remain spatially disconnected while still being parented in the correct hierarchy.
+- Deliberately detached parts may use spatially disconnected bones while remaining parented in the correct hierarchy.
 - Connect bones only when their joints must share the same point. Parenting does not require the **Connected** option.
 - Give bones enough visible length to select and understand them, but do not move a pivot merely to make a bone easier to select. Use custom control shapes instead.
 - Check placement from front, side, and orthographic views. A rig that appears aligned from one view may be offset in depth.
@@ -34,9 +36,8 @@
 
 - Use a stable hierarchy with one root bone. A typical hierarchy is `Root` -> `Torso` -> `Head`, hands, equipment, and other body parts as appropriate.
 - Match the hierarchy to actual motion. Parent a weapon to the hand or body part that carries it; parent secondary parts to the bone whose motion they should inherit.
-- Do not add anatomical chains that the stylized model does not need. This project's characters may have no arms and may use detached hands or body parts.
-- Use concise descriptive names such as `Root`, `Torso`, `Head`, `Hand_L`, `Hand_R`, `Boot_L`, `Boot_R`, and `Weapon`.
-- Always use `_L` and `_R` suffixes for paired bones. Keep names stable after export because Godot animation tracks and attachments may reference them.
+- Do not add anatomical chains that the model does not need, including chains for parts omitted by the project preferences.
+- Use the descriptive names and paired-part suffixes defined by the project preferences. Keep names stable after export because Godot animation tracks and attachments may reference them.
 - Give control-only bones a clear convention such as a `CTRL_` prefix, and mechanism/helper bones a convention such as `MCH_`.
 
 ## Deform And Control Bones

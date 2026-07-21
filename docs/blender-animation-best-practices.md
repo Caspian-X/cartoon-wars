@@ -2,6 +2,8 @@
 
 > **Default rule:** Animation must communicate gameplay clearly at game camera distance. Prefer strong poses, readable timing, and stable reusable clips over unnecessary motion or complexity.
 
+Follow [Blender Project Preferences](./blender-project-preferences.md) for the visual style, character anatomy, and detached-part requirements that animation must preserve.
+
 ## Before Animating
 
 1. List every required clip and its gameplay purpose before creating actions.
@@ -28,10 +30,10 @@
 - Block the main storytelling poses first using stepped or constant interpolation. Refine timing before polishing curves.
 - Build poses from the character's center of mass outward. Establish torso and root motion before secondary parts.
 - Check silhouettes from the gameplay camera. Hands, weapons, boots, and the head should not merge into unreadable shapes at important moments.
-- Push anticipation, contact, recoil, and recovery poses enough to remain readable for the project's stylized low-poly characters.
+- Push anticipation, contact, recoil, and recovery poses enough to remain readable in the project's visual style.
 - Preserve intentional asymmetry. Perfectly mirrored poses often appear static unless symmetry is required by the motion.
 - Use arcs for heads, hands, weapons, and other visible moving parts unless the motion is intentionally mechanical.
-- Respect the project's detached-part style. Floating hands, heads, boots, and other parts should move as a coordinated character without exposing accidental offsets or gaps.
+- Keep deliberately detached parts moving as a coordinated character without exposing accidental offsets or gaps.
 - Key all controls required to establish a clip's starting pose so playback does not depend on the previously viewed Blender action.
 - Do not key controls that have no effect on the clip unless consistent boundary keys are needed for reliable blending.
 
