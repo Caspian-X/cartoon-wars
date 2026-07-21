@@ -1,5 +1,5 @@
 ## Godot
-This is a godot project. 
+This is a godot project.
 
 Always use the godot best practices.
 
@@ -17,6 +17,12 @@ Organize gamespec tests by applicable `##` headings (for example `test_game_stat
 
 ## Blender
 
+If you need to use blender and the blender MCP is not started you can start it with the `just mcp` command.
+
 When using blender, load the [blender-best-practices.md](./docs/blender-best-practices.md) file and follow the best practices.
+
+When rigging a model in Blender, also load [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md) and follow its bone, skinning, control, and validation guidance.
+
+When animating a model in Blender, also load [blender-animation-best-practices.md](./docs/blender-animation-best-practices.md) and follow its action, posing, timing, export, and validation guidance.
 
 When using models in the game engine, load this file: [blender-models-in-godot.md](./docs/blender-models-in-godot.md).
