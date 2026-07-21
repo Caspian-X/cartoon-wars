@@ -12,9 +12,10 @@ Project-specific art and production choices are defined in [Blender Project Pref
 ### Naming
 - Follow Blender's default naming conventions for anything not defined by the project preferences.
 
-## Material
-- Always use node-based materials (Principled BSDF or another shader connected to Material Output) so colors show up in the rendered view. Legacy non-node materials only display in viewport preview and do not render.
-- Choose a shader appropriate for the object: Principled BSDF for most surfaces, Emission for glowing objects, Glossy for shiny surfaces, etc.
+## Materials
+
+- Use node-based materials with a shader connected to Material Output. Viewport display colors alone are not reliable in EEVEE renders or glTF exports.
+- Use Principled BSDF for most surfaces, Emission for intentionally self-lit surfaces, and specialized shaders only when the asset has a concrete need.
 
 ## Review
 

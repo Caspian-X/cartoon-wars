@@ -1,6 +1,6 @@
 # Blender Project Preferences
 
-These are Cartoon Wars-specific art and production choices. Follow them in addition to [Blender Best Practices](./blender-best-practices.md).
+These are Cartoon Wars-specific art and production choices. Follow them in addition to [Blender Best Practices](./blender-best-practices.md). These preferences take precedence if generic Blender guidance conflicts with an intentional project choice.
 
 ## Requirement Levels
 

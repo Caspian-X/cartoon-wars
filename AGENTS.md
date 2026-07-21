@@ -24,7 +24,7 @@ If Blender work requires the MCP and it is not started, run `just mcp`.
 
 ### Guides
 
-Before creating or changing Blender assets, read [blender-project-preferences.md](./docs/blender-project-preferences.md) and [blender-best-practices.md](./docs/blender-best-practices.md).
+Before creating, changing, or reviewing Blender assets, read [blender-project-preferences.md](./docs/blender-project-preferences.md) and [blender-best-practices.md](./docs/blender-best-practices.md).
 
 When changing armatures, bones, constraints, or skinning, also read [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md).
 
