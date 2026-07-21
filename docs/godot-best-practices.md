@@ -34,8 +34,7 @@ These rules apply to project-owned Godot code and assets. Vendored code under `r
 
 ## Testing And Validation
 
-- **Must:** Important gamespec requirements need automated acceptance tests organized by the applicable `##` gamespec heading.
-- **Must:** When a requirement changes, update its gamespec text and acceptance tests in the same change.
+- **Must:** Follow the authoritative [gamespec and acceptance-test policy](../AGENTS.md#gamespec) in `AGENTS.md`.
 - **Must:** Run relevant tests after game changes and inspect Godot editor and game logs for parse, load, and runtime errors.
 - **Should:** Test observable behavior instead of private method names or incidental node structure unless that architecture is itself an explicit requirement.
 - **Should:** Verify presentation changes at the target viewport size and in the running game, not only in the editor.

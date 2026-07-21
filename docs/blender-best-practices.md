@@ -1,6 +1,6 @@
 # Blender Best Practices
 
-> **Default rule:** Anything not explicitly covered in this file should follow standard Blender best practices and conventions.
+> **Default rule:** When guidance is absent, use Blender conventions appropriate to the asset. Ask before making a choice that affects visual or gameplay intent.
 
 Project-specific art and production choices are defined in [Blender Project Preferences](./blender-project-preferences.md).
 

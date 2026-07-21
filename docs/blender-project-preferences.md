@@ -10,7 +10,7 @@ These are Cartoon Wars-specific art and production choices. Follow them in addit
 
 ## Visual Style
 
-- **Must:** Use a faceted low-poly style with hard, unsmoothed edges.
+- **Must:** All authored 3D assets, including characters, props, environments, and effects, use a faceted low-poly style with hard, unsmoothed edges.
 - **Should:** Preserve readable silhouettes and major forms at the expected Godot gameplay camera distance.
 
 ## Characters
