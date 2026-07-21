@@ -21,17 +21,17 @@
 - **OVER** — A base has reached 0 HP. Result overlay shows Victory or Defeat with Play Again / Main Menu buttons.
 
 ### Transitions
-- MENU → LEVEL_SELECT: Enter key or Play button → `_on_level_select_requested()` → shows level select overlay.
-- LEVEL_SELECT → PLAYING: Select a level → `start_level(id)` → `start_game()` (sets enemy types, resets round, shows HUD).
-- PLAYING → OVER: `player_hp <= 0` or `enemy_hp <= 0` → `show_result(won)`.
-- OVER → PLAYING: Play Again button → `start_game()` (replays current level).
-- OVER → MENU: Main Menu button → `_show_menu()`.
-- PLAYING → MENU: (via restart) R key restarts the current level.
+- MENU → LEVEL_SELECT: Enter key or Play button shows the level select overlay.
+- LEVEL_SELECT → PLAYING: Selecting a level configures its enemy roster, resets the round, and shows the gameplay HUD.
+- PLAYING → OVER: Either base reaching 0 HP shows the corresponding result.
+- OVER → PLAYING: Play Again resets and replays the current level.
+- OVER → MENU: Main Menu returns to the title screen.
+- PLAYING → PLAYING: R key resets and restarts the current level.
 
 ## Game Flow
-1. **Launch** → MENU state. Scene `res://scenes/main.tscn` loads its explicit battlefield, simulation-layer, and HUD children; `Game._ready()` wires their signals and shows the menu overlay.
+1. **Launch** → MENU state. Scene `res://scenes/main.tscn` loads its explicit battlefield, simulation-layer, and HUD children; the game controller wires their signals and shows the menu overlay.
 2. **Level Select** → Enter or Play button → LEVEL_SELECT state. Shows level selection overlay with available levels.
-3. **Start** → Select a level → `start_level(id)` sets current level's enemy troop types → `start_game()` resets HP/mana/troops, sets state to PLAYING, hides overlays, shows HUD.
+3. **Start** → Selecting a level sets its enemy troop types, resets HP, mana, and troops, enters PLAYING, hides overlays, and shows the HUD.
 4. **Each frame (`_process`)**:
    a. Advance `time_sec`; redraw background.
    b. Regenerate mana for both sides.
@@ -72,7 +72,7 @@
 14. R14: Crossbow bolts travel with gravity (900 px/s²) at a reduced speed (~420 px/s). They deal 7 damage to the first troop they hit within 20 pixels and spawn hit particles; otherwise they disappear when they hit the ground. Bolts only damage enemies within the crossbow's targeting range (75% of the lane).
 
 ### Victory/Defeat
-16. R16: The game ends when either base reaches 0 HP. Enemy at 0 = Victory; Player at 0 = Defeat.
+15. R15: The game ends when either base reaches 0 HP. Enemy at 0 = Victory; Player at 0 = Defeat.
 
 ## Entities / Data Model
 

@@ -1,15 +1,14 @@
 ## Godot
-This is a godot project.
 
-Always use the godot best practices.
+This is a Godot project. Before changing Godot scenes, scripts, resources, project settings, or tests, read and follow [godot-best-practices.md](./docs/godot-best-practices.md).
 
 ## Gamespec
 
-The [gamespec.md](./docs/gamespec.md) is a file that defines states of the game, flow, rules, etc.
+The [gamespec.md](./docs/gamespec.md) defines the game's observable states, flow, rules, data, UI requirements, and runtime architecture.
 
-Always reference the gamespec before making changes to the game to see know how the game works and how parts of it that you may be updating/adding fit into the current state of the game.
+Read the relevant sections before changing gameplay behavior, game flow, balance, UI requirements, gameplay data, or runtime architecture. Documentation-only, tooling, and unrelated build changes do not require loading the full gamespec.
 
-After implementing changes to the game you need to check if you should update the gamespec to stay up to date. Report back to the user with a small bulleted list what changes were made. Also tell the user if no changes were made.
+After changing the game, update the gamespec when observable behavior or an intentional architectural requirement changed. Do not add incidental implementation details. In the final response, include a small bulleted list of gamespec changes or state that no gamespec changes were needed.
 
 Important gamespec requirements must have automated acceptance tests. When a requirement changes, update both the gamespec and its tests in the same change. Before finishing game work, run the relevant tests and verify that unchanged requirements still pass; add missing coverage when a regression reveals an untested requirement.
 
@@ -17,16 +16,16 @@ Organize gamespec tests by applicable `##` headings (for example `test_game_stat
 
 ## Blender
 
-If you need to use blender and the blender MCP is not started you can start it with the `just mcp` command.
+If Blender work requires the MCP and it is not started, run `just mcp`.
 
-When you are working in blender and find something that contradicts the blender guide files, please update them.
+When project work reveals that a guide is incorrect or incomplete, update it only when the finding is verified and broadly reusable. Do not turn an asset-specific workaround into project-wide policy. Preserve intentional project conventions even when they differ from general best practices. Keep guide changes narrowly scoped, report them separately in the final response, and ask before changing ambiguous visual or game-design intent.
 
 ### Guides
 
-When using blender, load the [blender-best-practices.md](./docs/blender-best-practices.md) file and follow the best practices.
+For any Blender work, read [blender-best-practices.md](./docs/blender-best-practices.md).
 
-When rigging a model in Blender, also load [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md) and follow its bone, skinning, control, and validation guidance.
+When changing armatures, bones, constraints, or skinning, also read [blender-rigging-best-practices.md](./docs/blender-rigging-best-practices.md).
 
-When animating a model in Blender, also load [blender-animation-best-practices.md](./docs/blender-animation-best-practices.md) and follow its action, posing, timing, export, and validation guidance.
+When changing actions or animation, also read [blender-animation-best-practices.md](./docs/blender-animation-best-practices.md).
 
-When using models in the game engine, load this file: [blender-models-in-godot.md](./docs/blender-models-in-godot.md).
+When exporting, importing, reimporting, or using a Blender asset in Godot, also read [blender-models-in-godot.md](./docs/blender-models-in-godot.md).

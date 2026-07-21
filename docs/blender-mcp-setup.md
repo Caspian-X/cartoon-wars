@@ -39,6 +39,14 @@ This clones the official Blender MCP server into `~/blender_mcp/`.
 
 ## Step 3: Start the MCP Server
 
+From the project root, run:
+
+```bash
+just mcp
+```
+
+This project command starts the server in the background. Its underlying command is:
+
 ```bash
 uv --directory ~/blender_mcp/mcp run blender-mcp --transport http --port 9191 &
 ```

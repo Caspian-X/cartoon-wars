@@ -2,21 +2,28 @@
 
 > **Default rule:** Anything not explicitly covered in this file should follow standard Blender best practices and conventions.
 
+## Requirement Levels
+
+- **Must:** A project invariant required for correct style or integration.
+- **Should:** The expected approach unless the asset has a concrete reason to differ.
+- **Default:** A starting point that should be adjusted for the asset and its use.
+- Unlabeled guidance should be treated as **Should**.
+
 ## Style
 
 ### General
-- Faceted low poly with lots of edges but no smooth edges.
+- **Must:** Use a faceted low-poly style with hard, unsmoothed edges.
 
 ### Character
-- No facial features (mouth, nose, eyes, etc.).
-- No arms. Hands may exist as sphere-like shapes attached to objects they are holding, or floating in a natural hand position if unoccupied or the object only requires one hand.
-- Head and other body parts may float detached from the torso (e.g. removing the neck and leaving the head suspended above). This is a valid stylistic choice.
+- **Must:** Characters have no facial features such as a mouth, nose, or eyes.
+- **Must:** Characters have no arms. Hands may be sphere-like shapes attached to held objects or may float in a natural position.
+- **Default:** Heads and other body parts may float detached from the torso when it supports the character design.
 
 ## Structure
 
 ### Parts
-- Parts should be separate objects, not a single joined mesh, so they can be imported into the game engine and animated.
-- When placing objects, account for the parent object's rotation before placing the child (e.g. if object A attaches to the tip of object B, place A relative to B's rotated transform).
+- **Should:** Keep rigid character parts as separate objects when they need independent rigging or animation. A deliberately deforming continuous mesh may remain joined.
+- **Must:** When placing objects, account for the parent object's rotation before placing the child.
 
 ### Naming
 - Use clear, descriptive names for each object (e.g. `Head`, `Torso`, `Boot_L`).
@@ -29,7 +36,7 @@
 - Maintain a consistent color theme across related parts (e.g. a soldier might use navy blue for cloth, brown leather for armor, dark steel for the helmet).
 
 ## Lighting
-Use a standard four-light setup:
+For isolated asset review renders, use this four-light setup as a default. Environment scenes and in-game wrapper scenes may use lighting designed for their actual context.
 
 | Light | Type | Role | Settings |
 |---|---|---|---|
